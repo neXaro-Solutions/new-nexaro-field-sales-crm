@@ -1,4 +1,4 @@
-# neXaro Field Sales CRM V2.6.1
+# neXaro Field Sales CRM V2.8
 
 Mobile-first PWA für den B2B-Außendienst mit sauber getrennten SUMUP- und VAPE-Modulen.
 
@@ -25,7 +25,7 @@ Die veröffentlichte GitHub-Pages-Adresse kann auf dem Smartphone zum Home-Bilds
 CRM-Daten werden lokal im Browser gespeichert. Regelmäßig über die Backup-Funktion sichern.
 
 
-## V2.6.1 Vape-Katalog
+## V2.8 Vape-Katalog
 - ELFBAR, Einweg und Pods aus Händler-CSV
 - L3/EK ausschließlich als private lokale Importdatei
 - Aufschlag auf EK einstellbar von 25 % bis 15 %
@@ -34,9 +34,12 @@ CRM-Daten werden lokal im Browser gespeichert. Regelmäßig über die Backup-Fun
 - CSV-Import filtert erneut auf die gewünschten Produktgruppen
 
 
-### V2.6.1
+### V2.8
 VAPE-Warenkorb + Kundenabschluss: Artikel hinzufügen, Mengen ändern, Warenkorb + Kundenabschluss leeren und direkt ein Angebot aus dem Warenkorb + Kundenabschluss erzeugen.
 
 
-### V2.6 Vape-Katalog
+### V2.8 Vape-Katalog
 Der öffentliche Vape-Katalog enthält nur noch: ELFA-Liquid (ELFLIQ), Einwegzigaretten, Prefilled Pods und Akkuträger. Alle anderen Artikel werden beim Start und beim CSV-Import ausgefiltert.
+
+### V2.8 Briefpapier
+Angebote und Vape-Rechnungen verwenden jetzt das Layout des bereitgestellten neXaro-Briefpapiers: Logo und Absenderblock oben rechts, Empfängerbereich, Angebots-/Rechnungsdaten, tabellarische Positionen sowie der dreispaltige Fußbereich. Die Bankverbindung wird bewusst nicht in den öffentlichen GitHub-Code übernommen.
