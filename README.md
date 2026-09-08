@@ -1,46 +1,34 @@
-# neXaro Field Sales CRM V2.0
+# neXaro Field Sales CRM V2.2
 
-Mobile-first PWA für den B2B-Außendienst.
+Mobile-first PWA für den B2B-Außendienst mit sauber getrennten SUMUP- und VAPE-Modulen.
 
-## Module
+## SUMUP
+Leads, Qualifizierung, Besuche, Follow-ups, Tarifvergleich und Angebote.
 
-- 🟠 SUMUP: Leads, Qualifizierung, Besuch, Follow-up, Tarifvergleich, Angebote
-- 🟣 VAPE: Startkatalog mit 25 bekannten Artikeln, Angebote und Rechnungen
-- 👥 gemeinsamer Kunden-/Lead-Stamm
-- 🔄 Cross-Selling
-- 📊 getrennte Vertriebsbereiche
-- 📱 PWA / GitHub Pages
+## VAPE
+25 Startartikel, Produktkatalog, Angebote und Rechnungen.
 
-## Vape-Preislogik
+### Interne L3/EK-Daten
+L3-Einkaufspreise sind **nicht Bestandteil des öffentlichen GitHub-Codes**. Der öffentliche Katalog enthält nur die für den Vertrieb benötigten Produkt- und VK-Daten.
 
-- Standardmarge: maximal 18 %
-- Formel: `VK = EK / 0,82`
-- Individuelle Verkaufspreise können später ergänzt werden.
-- L3/EK ist eine interne Information.
+Über **Vape → L3-EK Preise → L3 importieren** kann eine private JSON-Datei lokal in den Browser geladen werden. Die Daten werden nur in `localStorage` dieses Browsers gespeichert.
 
-## WICHTIG: Öffentliches GitHub-Repository
-
-Diese GitHub-Version enthält **keine L3-Einkaufspreise** und **keine Bankverbindung**. Das ist absichtlich so, weil das Repository öffentlich ist.
-
-Der öffentliche Katalog enthält die bereits aus deiner Preisliste abgeleiteten Verkaufspreise. Deine L3-Preise können in der App über **Vape → L3 importieren** aus einer privaten JSON-Datei geladen werden. Sie werden anschließend nur lokal im Browser gespeichert.
+Die öffentliche Version berechnet den VK **nicht** aus dem EK. Der VK ist als öffentlicher Katalogwert hinterlegt. Dadurch wird der EK nicht im JavaScript mitgeliefert.
 
 ## GitHub Pages
-
-1. Inhalt dieses Ordners in das Repository hochladen.
-2. GitHub → Settings → Pages.
-3. Source: `Deploy from a branch`.
-4. Branch: `main` und Ordner `/ (root)`.
-5. Speichern.
-6. Die erzeugte GitHub-Pages-Adresse öffnen.
+Repository → Settings → Pages → Deploy from a branch → `main` → `/ (root)`.
 
 ## PWA
+Die veröffentlichte GitHub-Pages-Adresse kann auf dem Smartphone zum Home-Bildschirm hinzugefügt werden.
 
-Auf dem Smartphone die GitHub-Pages-Adresse öffnen und „Zum Startbildschirm hinzufügen“ verwenden.
+## Daten
+CRM-Daten werden lokal im Browser gespeichert. Regelmäßig über die Backup-Funktion sichern.
 
-## Datenhaltung
 
-CRM-Daten werden lokal im Browser gespeichert. Regelmäßig über **JSON Backup** sichern.
-
-## Rechtlicher Hinweis
-
-Die App ist ein Vertriebs-/Dokumentenwerkzeug und ersetzt keine steuerliche oder rechtliche Prüfung. Rechnungsangaben und Umsatzsteuerlogik vor produktivem Einsatz prüfen.
+## V2.2 Vape-Katalog
+- ELFBAR, Einweg und Pods aus Händler-CSV
+- L3/EK ausschließlich als private lokale Importdatei
+- Aufschlag auf EK einstellbar von 25 % bis 15 %
+- VK wird aus privatem L3-EK berechnet
+- Öffentliche GitHub-Dateien enthalten keine EK/L3-Werte
+- CSV-Import filtert erneut auf die gewünschten Produktgruppen
