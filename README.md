@@ -1,4 +1,4 @@
-# neXaro Field Sales CRM V3.1
+# neXaro Field Sales CRM V3.2
 
 Mobile-first PWA for B2B field sales with shared customer master for SUMUP and VAPE.
 
@@ -19,3 +19,12 @@ The public GitHub build does not contain private bank account data or private L3
 
 ## Run
 Open `index.html` or host the folder as a static site / GitHub Pages PWA.
+
+
+## V3.2 – Zentrale Kundenroute
+- Außendienst-Routenplanung basiert auf dem zentralen Kundenstamm, nicht nur auf Leads.
+- Filter: alle Kunden, fällige Kunden, SUMUP, VAPE.
+- Kundenpriorität A/B/C wird über Hoch/Mittel/Niedrig abgebildet.
+- Verkaufsgebiet und Besuchstag können für die Tagesroute gesetzt werden.
+- Route kann manuell sortiert, in Google Maps geöffnet und lokal gespeichert werden.
+- Bestehende lokale CRM-Daten bleiben erhalten.
