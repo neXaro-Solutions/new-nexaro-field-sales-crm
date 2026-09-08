@@ -1,35 +1,21 @@
-# neXaro Field Sales CRM V3.0
+# neXaro Field Sales CRM V3.1
 
-Mobile-first PWA für den B2B-Außendienst mit getrennten SUMUP- und VAPE-Modulen und zentralem Kundenstamm.
+Mobile-first PWA for B2B field sales with shared customer master for SUMUP and VAPE.
 
-## V3.0 – Kundenakte
-- Ein zentraler Kunde für SUMUP und VAPE.
-- Automatische Verknüpfung bestehender und neuer SUMUP-Leads.
-- Kunden können manuell angelegt und bearbeitet werden.
-- Kundenakte mit Stammdaten, SUMUP, VAPE, Besuchen, Aufgaben, Terminen und Dokumenten.
-- Aktivitäts-Timeline über die wichtigsten Kundenaktivitäten.
-- Besuchshistorie wird separat gespeichert.
-- Aufgaben/Wiedervorlagen können direkt einem Kunden zugeordnet werden.
-- Schnellaktionen aus der Kundenakte: Aufgabe, SUMUP-Angebot, VAPE-Angebot, Rechnung.
-- Bestehende lokale CRM-Daten bleiben erhalten; Migration arbeitet additiv.
+## V3.1 – Gebiet & Außendienst
+- Customer-based territory planning
+- Radius search by PLZ / Ort or current location
+- Route date and filters: all, due today, SUMUP, VAPE
+- Automatic route ordering by proximity + priority
+- Manual route reordering
+- Single-customer navigation
+- Full route handoff to Google Maps
+- Save/load/delete local daily routes
+- Public OSM/Overpass prospect search for new leads
+- Existing CRM data preserved in localStorage
 
-## SUMUP
-Leads, Qualifizierung, Besuche, Follow-ups, Tarifvergleich und Angebote. Keine Rechnungsfunktion im SUMUP-Modul.
+## Privacy
+The public GitHub build does not contain private bank account data or private L3 price values.
 
-## VAPE
-VAPE-Katalog, Warenkorb, Angebote und Rechnungen.
-
-### Öffentlicher VAPE-Katalog
-Der Katalog enthält nur die gewünschten Gruppen: ELFA-Liquid (ELFLIQ), Einwegzigaretten, Prefilled Pods und Akkuträger. Beim Start und beim CSV-Import werden andere Artikel ausgefiltert.
-
-### Interne L3/EK-Daten
-L3-Einkaufspreise sind **nicht Bestandteil des öffentlichen GitHub-Codes**. Eine private L3-JSON-Datei kann lokal importiert werden. Der Aufschlag auf EK ist im VAPE-Modul einstellbar (15–25 %).
-
-### Briefpapier
-Angebote und VAPE-Rechnungen verwenden das neXaro-Briefpapier-Layout. Die Bankverbindung wird bewusst nicht im öffentlichen GitHub-Code hinterlegt.
-
-## GitHub Pages
-Repository → Settings → Pages → Deploy from a branch → `main` → `/ (root)`.
-
-## Daten
-CRM-Daten werden lokal im Browser gespeichert. Regelmäßig über die Backup-Funktion sichern.
+## Run
+Open `index.html` or host the folder as a static site / GitHub Pages PWA.
