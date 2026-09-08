@@ -1,3 +1,4 @@
+const BUILD_VERSION="2.2";
 const KEY="nexaro-crm-v2-0";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
