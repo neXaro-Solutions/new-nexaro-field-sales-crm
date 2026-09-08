@@ -1,4 +1,4 @@
-const BUILD_VERSION="3.8.0";
+const BUILD_VERSION="3.9.0";
 const KEY="nexaro-crm-v2-0";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
@@ -120,7 +120,42 @@ function setLeadStage(id,status){const l=S.leads.find(x=>x.id===id);if(!l)return
 function renderPipeline(){const el=$('#pipelineBoard');if(!el)return;const active=S.leads.filter(l=>l.status!=='verloren');const won=S.leads.filter(l=>l.status==='gewonnen').length;const open=S.leads.filter(l=>!['gewonnen','verloren'].includes(l.status)).length;const due=S.tasks.filter(t=>!t.done&&t.due&&t.due<=today()).length;const offers=S.leads.filter(l=>l.status==='angebot').length;$('#pipelineSummary').innerHTML=`<div class="kpi"><span>Offen</span><b>${open}</b></div><div class="kpi"><span>Angebote</span><b>${offers}</b></div><div class="kpi"><span>Fällig</span><b>${due}</b></div><div class="kpi"><span>Gewonnen</span><b>${won}</b></div>`;el.innerHTML=PIPELINE_STAGES.map(([stage,label])=>{const arr=S.leads.filter(l=>l.status===stage);return `<div class="pipeline-column"><div class="pipeline-column-head"><h3>${label}</h3><span class="pipeline-count">${arr.length}</span></div>${arr.map(l=>`<article class="pipeline-lead"><h4>${esc(l.company)}</h4><div class="meta">${money(l.tpv)} TPV · ${esc(l.priority||'Mittel')}</div><div class="meta">${esc(l.next||'Nächsten Schritt festlegen')}${l.due?' · '+esc(l.due):''}</div><div class="pipeline-lead-actions"><button class="secondary" data-pipeline-edit="${l.id}">Öffnen</button><select class="stage-select" data-pipeline-stage="${l.id}">${PIPELINE_STAGES.map(([v,n])=>`<option value="${v}" ${v===l.status?'selected':''}>${n}</option>`).join('')}</select></div></article>`).join('')||'<div class="empty">Keine Leads</div>'}</div>`}).join('')}
 $('#pipelineBoard')?.addEventListener('change',e=>{const id=e.target.dataset.pipelineStage;if(id)setLeadStage(id,e.target.value)});
 $('#pipelineBoard')?.addEventListener('click',e=>{const id=e.target.closest('[data-pipeline-edit]')?.dataset.pipelineEdit;if(id)lead(id)});
-function renderDash(){const openLeads=S.leads.filter(l=>!['gewonnen','verloren'].includes(l.status)).length;$('#kLeads').textContent=openLeads;$('#kTasks').textContent=S.tasks.filter(t=>!t.done&&t.due<=today()).length;$('#kAppts').textContent=S.leads.filter(l=>l.status==='termin').length;$('#kWon').textContent=S.leads.filter(l=>l.status==='gewonnen').length;if($('#kQuotes')) $('#kQuotes').textContent=S.quotes.filter(q=>q.status!=='accepted').length;const stages=['neu','kontaktiert','termin','angebot','gewonnen'];const stageLabels={neu:'Neu',kontaktiert:'Kontakt',termin:'Termin',angebot:'Angebot',gewonnen:'Gewonnen'};const counts=Object.fromEntries(stages.map(st=>[st,S.leads.filter(l=>l.status===st).length]));const total=S.leads.length;$('#pipelineTotal').textContent=`${total} ${total===1?'Lead':'Leads'}`;$('#pipelineBar').innerHTML=stages.map(st=>`<div class="pipe-segment pipe-${st}" style="width:${total?Math.max(counts[st]/total*100,counts[st]?2:0):0}%" title="${stageLabels[st]}: ${counts[st]}"></div>`).join('');$('#pipelineLegend').innerHTML=stages.map(st=>`<span><i class="dot dot-${st}"></i>${stageLabels[st]} <b>${counts[st]}</b></span>`).join('');const a=[...S.leads].filter(l=>!['gewonnen','verloren'].includes(l.status)).sort((x,y)=>(x.due||'9999').localeCompare(y.due||'9999')).slice(0,4);$('#dashboardTasks').innerHTML=a.map(l=>`<div class="card"><div class="row"><b>${esc(l.company)}</b><span class="badge">${esc(l.due||'')}</span></div><div class="meta">${esc(l.next||'Nächsten Kontakt festlegen')}</div></div>`).join('')||'<div class="empty">Noch keine offenen Leads.</div>';const b=[...S.leads].sort((x,y)=>(y.tpv||0)-(x.tpv||0))[0];$('#assistantCard').innerHTML=b?`<div class="row"><div><b>${esc(b.company)}</b><div class="meta">Größtes aktuelles TPV-Potenzial</div></div><span class="chip good">${money(b.tpv)}</span></div><p class="muted">${b.tpv>=5000?'Qualifiziert: Bedarf prüfen und Tarifvergleich durchführen.':'TPV unter internem Ziel: Potenzial verifizieren.'}</p><button class="secondary" data-edit="${b.id}">Lead öffnen</button>`:'<b>Bereit für den ersten Lead.</b><p class="muted">Erfasse einen Händler und der Sales Assistant priorisiert ihn automatisch.</p>'}
+function sumupLeadOnly(l){return l && !['vape'].includes(String(l.module||l.type||'').toLowerCase())}
+function sumupTaskOnly(t){if(!t)return false;const m=String(t.module||t.type||'').toLowerCase();if(m==='vape')return false;const l=t.leadId&&S.leads.find(x=>x.id===t.leadId);return !m || m==='sumup' || !!l}
+function sumupQuoteOnly(q){const m=String(q?.module||q?.type||'').toLowerCase();return m!=='vape'}
+function renderDash(){
+ const leads=S.leads.filter(sumupLeadOnly);
+ const tasks=S.tasks.filter(sumupTaskOnly);
+ const openTasks=tasks.filter(t=>!t.done);
+ const overdue=openTasks.filter(t=>t.due&&t.due<today());
+ const todayTasks=openTasks.filter(t=>t.due===today());
+ const futureTasks=openTasks.filter(t=>t.due&&t.due>today());
+ const openLeads=leads.filter(l=>!['gewonnen','verloren'].includes(l.status)).length;
+ const appointments=leads.filter(l=>l.status==='termin').length;
+ const won=leads.filter(l=>l.status==='gewonnen').length;
+ const quotes=S.quotes.filter(sumupQuoteOnly).filter(q=>q.status!=='accepted');
+ const potential=leads.filter(l=>!['verloren'].includes(l.status)).reduce((n,l)=>n+(Number(l.tpv)||0),0);
+ const byStage=['neu','kontaktiert','termin','angebot','gewonnen'];
+ const stageLabels={neu:'Neu',kontaktiert:'Kontakt',termin:'Termin',angebot:'Angebot',gewonnen:'Gewonnen'};
+ const counts=Object.fromEntries(byStage.map(st=>[st,leads.filter(l=>l.status===st).length]));
+ const total=leads.length;
+ $('#kLeads').textContent=openLeads; $('#kTasks').textContent=overdue.length+todayTasks.length; $('#kAppts').textContent=appointments; $('#kWon').textContent=won; if($('#kQuotes'))$('#kQuotes').textContent=quotes.length;
+ $('#pipelineTotal').textContent=`${total} ${total===1?'Lead':'Leads'}`;
+ $('#pipelineBar').innerHTML=byStage.map(st=>`<div class="pipe-segment pipe-${st}" style="width:${total?Math.max(counts[st]/total*100,counts[st]?2:0):0}%" title="${stageLabels[st]}: ${counts[st]}"></div>`).join('');
+ $('#pipelineLegend').innerHTML=byStage.map(st=>`<span><i class="dot dot-${st}"></i>${stageLabels[st]} <b>${counts[st]}</b></span>`).join('');
+ const due=[...overdue,...todayTasks].sort((a,b)=>(a.due||'').localeCompare(b.due||'')).slice(0,5);
+ $('#dashboardTasks').innerHTML=due.map(t=>{const l=t.leadId&&S.leads.find(x=>x.id===t.leadId);return `<button class="dash-task ${t.due<today()?'overdue':''}" data-dashboard-task="${t.id}"><div><b>${esc(t.title||t.type||'Aufgabe')}</b><span>${esc(l?.company||'SUMUP')}</span></div><strong>${t.due<today()?'Überfällig':'Heute'}</strong></button>`}).join('')||'<div class="empty">Keine dringenden Aufgaben. 🎉</div>';
+ const b=[...leads].sort((x,y)=>(Number(y.tpv)||0)-(Number(x.tpv)||0))[0];
+ $('#assistantCard').innerHTML=b?`<div class="row"><div><b>${esc(b.company)}</b><div class="meta">Größtes aktuelles TPV-Potenzial</div></div><span class="chip good">${money(b.tpv)}</span></div><p class="muted">${b.tpv>=5000?'Qualifiziert: Bedarf prüfen und Tarifvergleich durchführen.':'TPV unter internem Vertriebsziel: Potenzial verifizieren.'}</p><button class="secondary" data-edit="${b.id}">Lead öffnen</button>`:'<b>Bereit für den ersten Lead.</b><p class="muted">Erfasse einen Händler und der Sales Assistant priorisiert ihn automatisch.</p>';
+ if($('#dashOverdue'))$('#dashOverdue').textContent=overdue.length;
+ if($('#dashToday'))$('#dashToday').textContent=todayTasks.length;
+ if($('#dashFuture'))$('#dashFuture').textContent=futureTasks.length;
+ if($('#dashOffers'))$('#dashOffers').textContent=quotes.length;
+ if($('#dashWon'))$('#dashWon').textContent=won;
+ if($('#dashPotential'))$('#dashPotential').textContent=money(potential);
+ if($('#dashActive'))$('#dashActive').textContent=leads.length;
+}
+
 $('#assistantCard').onclick=e=>{const id=e.target.closest('[data-edit]')?.dataset.edit;if(id)lead(id)};
 async function geo(q){const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=de&q='+encodeURIComponent(q));const a=await r.json();if(!a[0])throw 0;return{lat:+a[0].lat,lon:+a[0].lon,label:a[0].display_name}}
 const dist=(a,b)=>{const R=6371,r=x=>x*Math.PI/180,dlat=r(b.lat-a.lat),dlon=r(b.lon-a.lon),x=Math.sin(dlat/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(dlon/2)**2;return 2*R*Math.asin(Math.sqrt(x))};
