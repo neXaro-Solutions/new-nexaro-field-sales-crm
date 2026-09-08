@@ -1,4 +1,4 @@
-# neXaro Field Sales CRM V3.5
+# neXaro Field Sales CRM V3.6
 
 Mobile-first PWA for B2B field sales with shared customer master for SUMUP and VAPE.
 
@@ -50,3 +50,14 @@ SUMUP Gesprächsleitfaden direkt im Lead: Einstieg, Bedarfsermittlung, Tarifverg
 - Status wird abhängig von der nächsten Aktion angepasst
 - Tarifvergleich bleibt direkt aus dem Gespräch erreichbar
 - VAPE bleibt technisch getrennt und wird durch die SUMUP-Logik nicht verändert
+
+
+## V3.6 – SUMUP Sales Assistant
+- Entscheidungsabhängiger Gesprächsfluss im SUMUP-Lead
+- Bei „gerade ungünstig“ Wechsel in einen Follow-up-/Rückrufpfad
+- Bedarf führt zu passenden Status-quo-Fragen
+- Anbieter, TPV und Problem können direkt im Gespräch erfasst werden
+- Erfasste Gesprächsdaten werden in der SUMUP-Leadakte gespeichert
+- Nächster Kontakt kann mit Datum als Task/Wiedervorlage gespeichert werden
+- Tarifvergleich ist aus dem Gespräch erreichbar
+- VAPE bleibt getrennt und unverändert
