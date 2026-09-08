@@ -1,4 +1,4 @@
-# neXaro Field Sales CRM V2.2
+# neXaro Field Sales CRM V2.3
 
 Mobile-first PWA für den B2B-Außendienst mit sauber getrennten SUMUP- und VAPE-Modulen.
 
@@ -25,10 +25,14 @@ Die veröffentlichte GitHub-Pages-Adresse kann auf dem Smartphone zum Home-Bilds
 CRM-Daten werden lokal im Browser gespeichert. Regelmäßig über die Backup-Funktion sichern.
 
 
-## V2.2 Vape-Katalog
+## V2.3 Vape-Katalog
 - ELFBAR, Einweg und Pods aus Händler-CSV
 - L3/EK ausschließlich als private lokale Importdatei
 - Aufschlag auf EK einstellbar von 25 % bis 15 %
 - VK wird aus privatem L3-EK berechnet
 - Öffentliche GitHub-Dateien enthalten keine EK/L3-Werte
 - CSV-Import filtert erneut auf die gewünschten Produktgruppen
+
+
+### V2.3
+VAPE-Warenkorb: Artikel hinzufügen, Mengen ändern, Warenkorb leeren und direkt ein Angebot aus dem Warenkorb erzeugen.
