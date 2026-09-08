@@ -1,4 +1,4 @@
-const BUILD_VERSION="2.2";
+const BUILD_VERSION="2.2.1";
 const KEY="nexaro-crm-v2-0";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
@@ -17,7 +17,7 @@ const close=id=>$("#"+id)?.close(), open=id=>$("#"+id)?.showModal();
 function qual(t){t=+t||0;return t>=15000?{l:"A",x:"Sehr starkes Potenzial",c:"qual-A"}:t>=10000?{l:"B",x:"Stark qualifiziert",c:"qual-B"}:t>=5000?{l:"C",x:"Qualifiziert",c:"qual-C"}:{l:"D",x:"Unter internem Vertriebsziel",c:"qual-D"}}
 const sl=s=>({neu:"Neu",kontaktiert:"Kontaktiert",termin:"Termin",angebot:"Angebot",gewonnen:"Gewonnen",verloren:"Verloren"}[s]||s);
 function nav(id){$$('.screen').forEach(x=>x.classList.toggle('active',x.id===id));$$('#nav button').forEach(x=>x.classList.toggle('active',x.dataset.screen===id));window.scrollTo(0,0);render()}
-$$('[data-screen]').forEach(b=>b.onclick=()=>nav(b.dataset.screen));
+$$('[data-screen]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();nav(b.dataset.screen)}));
 document.onclick=e=>{const c=e.target.closest('[data-close]');if(c){close(c.dataset.close);return}const a=e.target.closest('[data-action]')?.dataset.action;if(a)act(a)};
 function act(a){if(a==='new-lead')return lead();if(a==='new-task')return task();if(a==='pricing')return pricing();if(a==='commission')return commission();if(a==='new-quote')return quote();if(a==='export-csv')return csv();if(a==='backup')return download('nexaro-crm-backup.json',JSON.stringify(S,null,2),'application/json');if(a==='restore')return $('#restoreInput').click();if(a==='demo')return demo();if(a==='clear'&&confirm('Alle lokalen CRM-Daten löschen?')){S=structuredClone(base);save();render();toast('CRM gelöscht')}}
 function lead(id=null){$('#leadForm').reset();$('#leadId').value=id||'';$('#leadDialogTitle').textContent=id?'Lead bearbeiten':'Neuer Lead';const l=id&&S.leads.find(x=>x.id===id);if(l){for(const [k,i] of Object.entries({company:'fCompany',industry:'fIndustry',status:'fStatus',contact:'fContact',phone:'fPhone',email:'fEmail',address:'fAddress',tpv:'fTpv',provider:'fProvider',terminal:'fTerminal',product:'fProduct',priority:'fPriority',need:'fNeed',next:'fNext',due:'fDue',notes:'fNotes'}))$("#"+i).value=l[k]??''}else{$('#fDue').value=today();$('#fPriority').value='Hoch';$('#fStatus').value='neu'}hint();open('leadDialog')}
