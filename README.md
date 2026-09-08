@@ -1,4 +1,4 @@
-# neXaro Field Sales CRM V3.6
+# neXaro Field Sales CRM V3.8
 
 Mobile-first PWA for B2B field sales with shared customer master for SUMUP and VAPE.
 
@@ -52,7 +52,7 @@ SUMUP Gesprächsleitfaden direkt im Lead: Einstieg, Bedarfsermittlung, Tarifverg
 - VAPE bleibt technisch getrennt und wird durch die SUMUP-Logik nicht verändert
 
 
-## V3.6 – SUMUP Sales Assistant
+## V3.8 – SUMUP Sales Assistant
 - Entscheidungsabhängiger Gesprächsfluss im SUMUP-Lead
 - Bei „gerade ungünstig“ Wechsel in einen Follow-up-/Rückrufpfad
 - Bedarf führt zu passenden Status-quo-Fragen
@@ -61,3 +61,10 @@ SUMUP Gesprächsleitfaden direkt im Lead: Einstieg, Bedarfsermittlung, Tarifverg
 - Nächster Kontakt kann mit Datum als Task/Wiedervorlage gespeichert werden
 - Tarifvergleich ist aus dem Gespräch erreichbar
 - VAPE bleibt getrennt und unverändert
+
+
+## SUMUP Tarifvergleich V3.8
+- Interner neXaro-Vertriebsschwellenwert: 5.000 € monatliches Kartenzahlungsvolumen.
+- Offizielle SumUp Deutschland Konditionen im Rechner: 1,39 % umsatzbasiert bzw. 0,79 % + 19 € mit Zahlungen Plus.
+- Einmalige Hardwarekosten werden separat und zusätzlich in 1. Monat / 1. Jahr ausgewiesen.
+- Eigener Hardware-Rabatt: 0–25 %; Barcodescanner, Kassenschublade und Epson-Drucker sind rabattfrei.

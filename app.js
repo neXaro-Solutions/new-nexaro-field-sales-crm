@@ -1,4 +1,4 @@
-const BUILD_VERSION="3.5.0";
+const BUILD_VERSION="3.8.0";
 const KEY="nexaro-crm-v2-0";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
@@ -81,10 +81,10 @@ $('#visitForm').onsubmit=e=>{e.preventDefault();const l=S.leads.find(x=>x.id===$
 function task(customerId=null){ $('#taskForm').reset();$('#tDue').value=today();$('#tCustomer').innerHTML=customerOptions(customerId||'');$('#tLead').innerHTML='<option value="">Ohne Lead</option>'+S.leads.map(l=>`<option value="${l.id}">${esc(l.company)}</option>`).join('');if(customerId){$('#tCustomer').value=customerId;const l=S.leads.find(x=>x.customerId===customerId);if(l)$('#tLead').value=l.id}open('taskDialog') }
 $('#tCustomer')?.addEventListener('change',()=>{const c=customerById($('#tCustomer').value);if(c){const l=S.leads.find(x=>x.customerId===c.id);$('#tLead').value=l?.id||''}});
 $('#tLead')?.addEventListener('change',()=>{const l=S.leads.find(x=>x.id===$('#tLead').value);if(l&&l.customerId){$('#tCustomer').value=l.customerId}});
-$('#taskForm').onsubmit=e=>{e.preventDefault();const leadId=$('#tLead').value,lead=S.leads.find(x=>x.id===leadId),customerId=$('#tCustomer').value||lead?.customerId||'';S.tasks.unshift({id:uid(),title:$('#tTitle').value.trim(),due:$('#tDue').value,leadId,customerId,note:$('#tNote').value.trim(),done:false});save();close('taskDialog');render();toast('Task gespeichert')};
+$('#taskForm').onsubmit=e=>{e.preventDefault();const leadId=$('#tLead').value,lead=S.leads.find(x=>x.id===leadId),customerId=$('#tCustomer').value||lead?.customerId||'';const title=$('#tTitle').value.trim();if(!title)return toast('Titel fehlt');S.tasks.unshift({id:uid(),title,due:$('#tDue').value,leadId,customerId,note:$('#tNote').value.trim(),type:$('#tType')?.value||'Follow-up',priority:$('#tPriority')?.value||'Mittel',done:false,createdAt:new Date().toISOString()});save();close('taskDialog');render();toast('Task gespeichert')};
 $$('[data-taskfilter]').forEach(b=>b.onclick=()=>{tf=b.dataset.taskfilter;$$('[data-taskfilter]').forEach(x=>x.classList.remove('active'));b.classList.add('active');tasks()});
-function tasks(){const a=S.tasks.filter(t=>tf==='all'||tf==='open'&&!t.done||tf==='done'&&t.done||tf==='today'&&!t.done&&t.due===today()).sort((a,b)=>(a.due||'').localeCompare(b.due||''));$('#taskList').innerHTML=a.map(t=>{const l=S.leads.find(x=>x.id===t.leadId),c=customerById(t.customerId)||customerById(l?.customerId);return `<div class="card task ${t.done?'done':''}"><input type="checkbox" ${t.done?'checked':''} data-task="${t.id}"><div class="task-body"><b>${esc(t.title)}</b><div class="meta ${!t.done&&t.due<today()?'overdue':''}">${esc(t.due||'ohne Datum')}${c?' · '+esc(c.company):l?' · '+esc(l.company):''}</div>${t.note?`<div class="meta">${esc(t.note)}</div>`:''}</div></div>`}).join('')||'<div class="empty">Keine Tasks in dieser Ansicht.</div>'}
-$('#taskList').onchange=e=>{const id=e.target.dataset.task;if(id){const t=S.tasks.find(x=>x.id===id);t.done=e.target.checked;save();tasks();renderDash()}};
+function tasks(){const a=S.tasks.filter(t=>tf==='all'||tf==='open'&&!t.done||tf==='done'&&t.done||tf==='today'&&!t.done&&t.due===today()).sort((a,b)=>(a.done-b.done)||(a.due||'').localeCompare(b.due||''));$('#taskList').innerHTML=a.map(t=>{const l=S.leads.find(x=>x.id===t.leadId),c=customerById(t.customerId)||customerById(l?.customerId);const overdue=!t.done&&t.due&&t.due<today();return `<div class="card task ${t.done?'done':''}"><input type="checkbox" ${t.done?'checked':''} data-task="${t.id}"><div class="task-body"><div class="row"><b>${esc(t.title)}</b><span class="task-priority">${esc(t.priority||'Mittel')}</span></div><div class="meta ${overdue?'overdue task-overdue':''}">${esc(t.due||'ohne Datum')}${c?' · '+esc(c.company):l?' · '+esc(l.company):''}${t.type?' · '+esc(t.type):''}</div>${t.note?`<div class="meta">${esc(t.note)}</div>`:''}</div><div class="task-actions"><button class="icon-btn" data-task-delete="${t.id}">🗑️</button></div></div>`}).join('')||'<div class="empty">Keine Tasks in dieser Ansicht.</div>'}
+$('#taskList').onchange=e=>{const id=e.target.dataset.task;if(id){const t=S.tasks.find(x=>x.id===id);if(t){t.done=e.target.checked;t.completedAt=t.done?new Date().toISOString():'';save();tasks();renderDash();renderPipeline()}}};$('#taskList').onclick=e=>{const id=e.target.closest('[data-task-delete]')?.dataset.taskDelete;if(id&&confirm('Diese Aufgabe löschen?')){S.tasks=S.tasks.filter(x=>x.id!==id);save();tasks();renderDash()}};
 
 const MOTIVATION_QUOTES=[
   ["Nicht jeder Besuch bringt einen Abschluss – aber jeder gute Besuch bringt dich näher zum Abschluss. 🚀","neXaro Tagesimpuls"],
@@ -115,6 +115,11 @@ if($('#loadWeather'))$('#loadWeather').onclick=loadWeather;
 if($('#nextQuote'))$('#nextQuote').onclick=()=>{motivationIndex++;renderMotivation()};
 renderMotivation();
 
+const PIPELINE_STAGES=[['neu','Neu'],['kontaktiert','Kontakt'],['termin','Termin'],['angebot','Angebot'],['gewonnen','Gewonnen'],['verloren','Verloren']];
+function setLeadStage(id,status){const l=S.leads.find(x=>x.id===id);if(!l)return;l.status=status;l.updatedAt=new Date().toISOString();if(status==='gewonnen')l.closedAt=new Date().toISOString();save();render();toast('Pipeline aktualisiert · '+sl(status))}
+function renderPipeline(){const el=$('#pipelineBoard');if(!el)return;const active=S.leads.filter(l=>l.status!=='verloren');const won=S.leads.filter(l=>l.status==='gewonnen').length;const open=S.leads.filter(l=>!['gewonnen','verloren'].includes(l.status)).length;const due=S.tasks.filter(t=>!t.done&&t.due&&t.due<=today()).length;const offers=S.leads.filter(l=>l.status==='angebot').length;$('#pipelineSummary').innerHTML=`<div class="kpi"><span>Offen</span><b>${open}</b></div><div class="kpi"><span>Angebote</span><b>${offers}</b></div><div class="kpi"><span>Fällig</span><b>${due}</b></div><div class="kpi"><span>Gewonnen</span><b>${won}</b></div>`;el.innerHTML=PIPELINE_STAGES.map(([stage,label])=>{const arr=S.leads.filter(l=>l.status===stage);return `<div class="pipeline-column"><div class="pipeline-column-head"><h3>${label}</h3><span class="pipeline-count">${arr.length}</span></div>${arr.map(l=>`<article class="pipeline-lead"><h4>${esc(l.company)}</h4><div class="meta">${money(l.tpv)} TPV · ${esc(l.priority||'Mittel')}</div><div class="meta">${esc(l.next||'Nächsten Schritt festlegen')}${l.due?' · '+esc(l.due):''}</div><div class="pipeline-lead-actions"><button class="secondary" data-pipeline-edit="${l.id}">Öffnen</button><select class="stage-select" data-pipeline-stage="${l.id}">${PIPELINE_STAGES.map(([v,n])=>`<option value="${v}" ${v===l.status?'selected':''}>${n}</option>`).join('')}</select></div></article>`).join('')||'<div class="empty">Keine Leads</div>'}</div>`}).join('')}
+$('#pipelineBoard')?.addEventListener('change',e=>{const id=e.target.dataset.pipelineStage;if(id)setLeadStage(id,e.target.value)});
+$('#pipelineBoard')?.addEventListener('click',e=>{const id=e.target.closest('[data-pipeline-edit]')?.dataset.pipelineEdit;if(id)lead(id)});
 function renderDash(){const openLeads=S.leads.filter(l=>!['gewonnen','verloren'].includes(l.status)).length;$('#kLeads').textContent=openLeads;$('#kTasks').textContent=S.tasks.filter(t=>!t.done&&t.due<=today()).length;$('#kAppts').textContent=S.leads.filter(l=>l.status==='termin').length;$('#kWon').textContent=S.leads.filter(l=>l.status==='gewonnen').length;if($('#kQuotes')) $('#kQuotes').textContent=S.quotes.filter(q=>q.status!=='accepted').length;const stages=['neu','kontaktiert','termin','angebot','gewonnen'];const stageLabels={neu:'Neu',kontaktiert:'Kontakt',termin:'Termin',angebot:'Angebot',gewonnen:'Gewonnen'};const counts=Object.fromEntries(stages.map(st=>[st,S.leads.filter(l=>l.status===st).length]));const total=S.leads.length;$('#pipelineTotal').textContent=`${total} ${total===1?'Lead':'Leads'}`;$('#pipelineBar').innerHTML=stages.map(st=>`<div class="pipe-segment pipe-${st}" style="width:${total?Math.max(counts[st]/total*100,counts[st]?2:0):0}%" title="${stageLabels[st]}: ${counts[st]}"></div>`).join('');$('#pipelineLegend').innerHTML=stages.map(st=>`<span><i class="dot dot-${st}"></i>${stageLabels[st]} <b>${counts[st]}</b></span>`).join('');const a=[...S.leads].filter(l=>!['gewonnen','verloren'].includes(l.status)).sort((x,y)=>(x.due||'9999').localeCompare(y.due||'9999')).slice(0,4);$('#dashboardTasks').innerHTML=a.map(l=>`<div class="card"><div class="row"><b>${esc(l.company)}</b><span class="badge">${esc(l.due||'')}</span></div><div class="meta">${esc(l.next||'Nächsten Kontakt festlegen')}</div></div>`).join('')||'<div class="empty">Noch keine offenen Leads.</div>';const b=[...S.leads].sort((x,y)=>(y.tpv||0)-(x.tpv||0))[0];$('#assistantCard').innerHTML=b?`<div class="row"><div><b>${esc(b.company)}</b><div class="meta">Größtes aktuelles TPV-Potenzial</div></div><span class="chip good">${money(b.tpv)}</span></div><p class="muted">${b.tpv>=5000?'Qualifiziert: Bedarf prüfen und Tarifvergleich durchführen.':'TPV unter internem Ziel: Potenzial verifizieren.'}</p><button class="secondary" data-edit="${b.id}">Lead öffnen</button>`:'<b>Bereit für den ersten Lead.</b><p class="muted">Erfasse einen Händler und der Sales Assistant priorisiert ihn automatisch.</p>'}
 $('#assistantCard').onclick=e=>{const id=e.target.closest('[data-edit]')?.dataset.edit;if(id)lead(id)};
 async function geo(q){const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=de&q='+encodeURIComponent(q));const a=await r.json();if(!a[0])throw 0;return{lat:+a[0].lat,lon:+a[0].lon,label:a[0].display_name}}
@@ -141,32 +146,57 @@ $('#routeList').onclick=e=>{let i=e.target.closest('[data-route-up]')?.dataset.r
 $('#openRoute').onclick=()=>{const u=routeUrl();if(u)window.open(u,'_blank')};$('#saveRoute').onclick=saveRoutePlan;
 $('#savedRoutes').onclick=async e=>{const id=e.target.closest('[data-load-route]')?.dataset.loadRoute;if(id)return loadRoutePlan(id);const did=e.target.closest('[data-delete-route]')?.dataset.deleteRoute;if(did&&confirm('Gespeicherte Route löschen?')){S.routePlans=S.routePlans.filter(x=>x.id!==did);save();renderSavedRoutes();return}const oid=e.target.closest('[data-open-saved-route]')?.dataset.openSavedRoute;if(oid){const p=S.routePlans.find(x=>x.id===oid);if(!p)return;const pts=p.customerIds.map(id=>customerById(id)).filter(c=>Number.isFinite(+c?.lat)&&Number.isFinite(+c?.lon)).map(c=>`${c.lat},${c.lon}`);if(p.origin&&pts.length)window.open('https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(`${p.origin.lat},${p.origin.lon}`)+'&destination='+encodeURIComponent(pts.at(-1))+'&waypoints='+encodeURIComponent(pts.slice(0,-1).join('|'))+'&travelmode=driving','_blank')}};
 $('#prospectList').onclick=e=>{const b=e.target.closest('[data-prospect]');if(!b)return;const p=JSON.parse(decodeURIComponent(b.dataset.prospect));$('#leadForm').reset();$('#leadId').value='';$('#leadDialogTitle').textContent='Neuer SUMUP-Lead aus Gebiet';$('#fCompany').value=p.name;const pa=splitAddress(p.address||'');$('#fStreet').value=pa.street;$('#fZip').value=pa.zip;$('#fCity').value=pa.city;$('#fDue').value=today();$('#fStatus').value='neu';$('#fPriority').value='Mittel';hint();open('leadDialog')};
-function pricing(){ $('#pTpv').value=5000;calcPricing();open('pricingDialog') }
+const SUMUP_INTERNAL_THRESHOLD=5000;
+const SUMUP_HARDWARE=[
+  {price:0,name:'Keine Hardware'},
+  {price:34,name:'Solo Lite'},
+  {price:79,name:'Solo'},
+  {price:169,name:'Terminal'},
+  {price:399,name:'SumUp Kasse / Register'}
+];
+function pricing(){ $('#pTpv').value=5000;$('#pHardwareDiscount').value=25;$('#pHardwareExtra').value=0;calcPricing();open('pricingDialog') }
 function calcPricing(){
   const tpv=+$('#pTpv').value||0,rate=+$('#pCurrentRate').value||0,fixed=+$('#pCurrentFixed').value||0;
+  const hardwareList=+$('#pHardware').value||0;
+  const requestedDiscount=Math.min(25,Math.max(0,+$('#pHardwareDiscount').value||0));
+  $('#pHardwareDiscount').value=requestedDiscount;
+  const hardwareDiscount=hardwareList*requestedDiscount/100;
+  const hardwareSale=hardwareList-hardwareDiscount;
+  const hardwareExtra=Math.max(0,+$('#pHardwareExtra').value||0);
+  const oneTimeHardware=hardwareSale+hardwareExtra;
   const current=tpv*rate/100+fixed;
   const payg=tpv*0.0139;
   const plus=tpv*0.0079+19;
   const plans=[
-    {key:'payg',name:'SumUp umsatzbasiert',monthly:payg,description:'1,39% auf Kartenzahlungen · 0 € Monatsgebühr',fee:'1,39%',fixed:0},
-    {key:'plus',name:'SumUp Zahlungen Plus',monthly:plus,description:'0,79% auf berechtigte EEA-Verbraucherkarten · 19 € Monatsgebühr',fee:'0,79%',fixed:19}
+    {key:'payg',name:'SumUp umsatzbasiertes Zahlen',monthly:payg,description:'1,39 % auf Kartenzahlungen · 0 € Monatsgebühr',fee:'1,39%',fixed:0},
+    {key:'plus',name:'SumUp Zahlungen Plus',monthly:plus,description:'0,79 % auf berechtigte EWR-Verbraucherkarten · 19 € Monatsgebühr',fee:'0,79%',fixed:19}
   ];
+  const recommended=tpv>=SUMUP_INTERNAL_THRESHOLD?'plus':'payg';
+  const hwLine=hardwareList?`<small>Hardware: ${money(hardwareList)} − ${money(hardwareDiscount)} Rabatt = <b>${money(hardwareSale)}</b>${hardwareExtra?` · Zubehör/Einmalgebühr: ${money(hardwareExtra)}`:''}</small>`:(hardwareExtra?`<small>Zubehör/Einmalgebühr: <b>${money(hardwareExtra)}</b> · rabattfrei</small>`:'<small>Keine einmalige Hardware hinterlegt</small>');
   $('#pricingResult').innerHTML=
     `<div class="result"><b>Aktuell</b><strong>${money(current)}/Monat</strong><small>nach deinen Eingaben</small></div>`+
-    plans.map(p=>`<div class="result tariff-result"><div><b>${esc(p.name)}</b><strong>${money(p.monthly)}/Monat</strong><small>${esc(p.description)}</small></div><button class="primary" data-use-tariff="${p.key}">💼 Ins Angebot</button></div>`).join('')+
-    `<div class="qual-box qual-C"><b>Sales Assistant</b><br>Empfehlung anhand von TPV und Kartenmischung prüfen. Mit „Ins Angebot“ wird die ausgewählte SumUp-Lösung direkt als Angebotsposition übernommen.</div>`;
+    `<div class="result"><b>Einmalige Hardware</b><strong>${money(oneTimeHardware)}</strong>${hwLine}</div>`+
+    plans.map(p=>{const firstMonth=p.monthly+oneTimeHardware,firstYear=p.monthly*12+oneTimeHardware;return `<div class="result tariff-result"><div><b>${esc(p.name)} ${p.key===recommended?'· EMPFOHLEN':''}</b><strong>${money(p.monthly)}/Monat</strong><small>${esc(p.description)}</small><small>1. Monat inkl. Hardware: <b>${money(firstMonth)}</b> · 1. Jahr inkl. Hardware: <b>${money(firstYear)}</b></small></div><button class="primary" data-use-tariff="${p.key}">💼 Ins Angebot</button></div>`}).join('')+
+    `<div class="qual-box qual-${recommended==='plus'?'A':'B'}"><b>Vertriebsempfehlung bei ${money(tpv)} TPV</b><br>${recommended==='plus'?'Zahlungen Plus':'Umsatzbasiertes Zahlen'} anhand der neXaro 5.000-€-Schwelle. <span class="muted">Die Hardware wird zusätzlich einmalig gerechnet und ist nicht Teil der monatlichen Tarifgebühr.</span></div>`;
 }
-$('#pTpv').oninput=calcPricing;$('#pCurrentRate').oninput=calcPricing;$('#pCurrentFixed').oninput=calcPricing;
+$('#pTpv').oninput=calcPricing;$('#pCurrentRate').oninput=calcPricing;$('#pCurrentFixed').oninput=calcPricing;$('#pHardware').onchange=calcPricing;$('#pHardwareDiscount').oninput=calcPricing;$('#pHardwareExtra').oninput=calcPricing;
 $('#pricingResult').onclick=e=>{
   const b=e.target.closest('[data-use-tariff]');
   if(!b)return;
   const tpv=+$('#pTpv').value||0;
   const key=b.dataset.useTariff;
-  const tariff=key==='plus'
-    ? {description:'SumUp Zahlungen Plus – Monatsgebühr',qty:1,unit:'Monat',price:19,note:`SumUp Zahlungen Plus: 0,79% auf berechtigte EEA-Verbraucherkarten. Berechnungsbasis im Vergleich: ${money(tpv)} monatliches Kartenzahlungsvolumen.`}
-    : {description:'SumUp umsatzbasiert – Monatsgebühr',qty:1,unit:'Monat',price:0,note:`SumUp umsatzbasiertes Modell: 1,39% auf Kartenzahlungen, 0 € Monatsgebühr. Berechnungsbasis im Vergleich: ${money(tpv)} monatliches Kartenzahlungsvolumen.`};
+  const hardwareList=+$('#pHardware').value||0;
+  const hardwareDiscount=Math.min(25,Math.max(0,+$('#pHardwareDiscount').value||0));
+  const hardwareSale=hardwareList-(hardwareList*hardwareDiscount/100);
+  const hardwareExtra=Math.max(0,+$('#pHardwareExtra').value||0);
+  const items=[];
+  if(key==='plus')items.push({description:'SumUp Zahlungen Plus – Monatsgebühr',qty:1,unit:'Monat',price:19,note:`SumUp Zahlungen Plus: 0,79 % auf berechtigte EWR-Verbraucherkarten. Berechnungsbasis: ${money(tpv)} monatliches Kartenzahlungsvolumen.`});
+  else items.push({description:'SumUp umsatzbasiertes Zahlen – Monatsgebühr',qty:1,unit:'Monat',price:0,note:`SumUp umsatzbasiertes Modell: 1,39 % auf Kartenzahlungen, 0 € Monatsgebühr. Berechnungsbasis: ${money(tpv)} monatliches Kartenzahlungsvolumen.`});
+  if(hardwareList){const name=SUMUP_HARDWARE.find(x=>x.price===hardwareList)?.name||'SumUp Hardware';items.push({description:`${name} – einmalige Hardware`,qty:1,unit:'Stück',price:hardwareSale,note:`Offizieller Listenpreis ${money(hardwareList)} · eigener neXaro Hardware-Rabatt ${hardwareDiscount}% · Angebotspreis ${money(hardwareSale)}.`})}
+  if(hardwareExtra)items.push({description:'Sonstiges Zubehör / Einmalgebühr',qty:1,unit:'Stück',price:hardwareExtra,note:'Einmalige Gebühr · kein Hardware-Rabatt hinterlegt.'});
+  const tariff={description:key==='plus'?'SumUp Zahlungen Plus – Monatsgebühr':'SumUp umsatzbasiertes Zahlen – Monatsgebühr',qty:1,unit:'Monat',price:key==='plus'?19:0,note:`SumUp Deutschland · neXaro Vertriebsschwelle 5.000 € · TPV ${money(tpv)}.`};
   close('pricingDialog');
-  quote(null,null,{tariff,tariffKey:key,tpv});
+  quote(null,null,{tariff,tariffKey:key,tpv,items});
 };
 function commission(){calcCommission();open('commissionDialog')}
 function calcCommission(){const tpv=+$('#cTpv').value||0,hw=+$('#cHardware').value||0,sw=+$('#cSoftware').value||0,activation=tpv>=500?200:0,pay=(tpv*0.007*12)*0.5,topup30=Math.max(0,pay-activation),hardware=hw*0.5,software=sw*12*0.5,bonus=(+$('#cContracts').value?100:0)+(+$('#cPos').value?100:0)+(+$('#cChampion').value?100:0)+(+$('#cMaster').value?100:0),total=activation+topup30+hardware+software+bonus;$('#commissionResult').innerHTML=`<div class="result"><b>Aktivierung</b><strong>${money(activation)}</strong></div><div class="result"><b>Payments Top-Up 30</b><strong>${money(topup30)}</strong><small>mit 0,7% angenommener Net Revenue Margin</small></div><div class="result"><b>Hardware</b><strong>${money(hardware)}</strong></div><div class="result"><b>Software</b><strong>${money(software)}</strong></div><div class="result"><b>Boni</b><strong>${money(bonus)}</strong></div><div class="result"><b>Interne Deal-Summe</b><strong>${money(total)}</strong><small>Nur intern · Vertragsbedingungen haben Vorrang</small></div>`}
@@ -193,7 +223,7 @@ function quote(id=null,leadId=null,preset=null){
     q={leadId:l.id,company:l.company,contact:l.contact,email:l.email,items:[{description:l.product||"SumUp Lösung",qty:1,unit:"Stück",price:0}],date:today(),validUntil:nextDate(14),status:"draft"};
   }
   if(!q&&preset){
-    q={company:"",contact:"",email:"",items:[preset.tariff],date:today(),validUntil:nextDate(14),status:"draft",note:preset.tariff.note||""};
+    q={company:"",contact:"",email:"",items:preset.items?.length?preset.items:[preset.tariff],date:today(),validUntil:nextDate(14),status:"draft",note:`${preset.tariff.note||""} Einmalige Hardware wird separat berücksichtigt.`};
   }
   if(q){
     $("#qCustomer").value=q.customerId||S.leads.find(l=>l.id===q.leadId)?.customerId||"";
@@ -241,7 +271,7 @@ function csv(){const rows=[['Firma','Branche','Status','Kontakt','Telefon','E-Ma
 function download(name,data,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 $('#restoreInput').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{S={...base,...JSON.parse(r.result)};save();render();toast('Backup wiederhergestellt')}catch{toast('Backup ungültig')}};r.readAsText(f)};
 function demo(){S.leads=[{id:uid(),company:'Demo Kiosk',industry:'Kiosk / Späti',status:'neu',contact:'Max Beispiel',phone:'01700000000',email:'',address:'10115 Berlin',tpv:8500,qualified:true,qualification:'C',product:'Solo',priority:'Hoch',need:'Hohe Kartengebühren',next:'Tarifvergleich',due:today(),notes:''},{id:uid(),company:'Demo Gastro',industry:'Gastronomie',status:'termin',contact:'Anna Beispiel',phone:'',email:'',address:'10117 Berlin',tpv:18000,qualified:true,qualification:'A',product:'Terminal',priority:'Hoch',need:'Schnelleres Terminal',next:'Termin vor Ort',due:today(),notes:''}];S.tasks=[{id:uid(),title:'Demo Gastro besuchen',due:today(),leadId:S.leads[1].id,note:'Termin',done:false}];save();render();toast('Demo-Daten angelegt')}
-function render(){renderDash();leads();tasks();docs();if($('#more')?.classList.contains('active'))docs()}
+function render(){renderDash();leads();tasks();renderPipeline();docs();if($('#more')?.classList.contains('active'))docs()}
 render();
 
 // V2.2 VAPE MODULE — public catalog, private L3 pricing
