@@ -1,4 +1,4 @@
-# neXaro Field Sales CRM V3.3
+# neXaro Field Sales CRM V3.4
 
 Mobile-first PWA for B2B field sales with shared customer master for SUMUP and VAPE.
 
@@ -30,9 +30,13 @@ Open `index.html` or host the folder as a static site / GitHub Pages PWA.
 - Bestehende lokale CRM-Daten bleiben erhalten.
 
 
-## V3.3 – SUMUP Lead-Erfassung
+## V3.4 – SUMUP Lead-Erfassung
 - SUMUP-Leads können jetzt getrennt in Straße/Hausnummer, PLZ und Ort erfasst werden.
 - PLZ und Ort sind für neue SUMUP-Leads Pflichtfelder, damit Gebiet und Routenplanung funktionieren.
 - Bestehende Adressen werden beim Update nach Möglichkeit automatisch in Straße, PLZ und Ort aufgeteilt.
 - SUMUP-Leads werden weiterhin mit dem zentralen Kundenstamm verknüpft.
 - VAPE-Funktionen und der bestehende VAPE-Katalog bleiben unverändert und sind nicht Teil der SUMUP-Lead-Erfassung.
+
+
+## V3.4
+SUMUP Gesprächsleitfaden direkt im Lead: Einstieg, Bedarfsermittlung, Tarifvergleich, Einwandbehandlung, Abschluss und Gesprächsdokumentation. VAPE bleibt als eigener Bereich erhalten.
