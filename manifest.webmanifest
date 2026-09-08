@@ -1,0 +1,17 @@
+{
+  "name": "neXaro Field Sales CRM V2.0",
+  "short_name": "neXaro CRM",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#08111f",
+  "theme_color": "#08111f",
+  "lang": "de",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
