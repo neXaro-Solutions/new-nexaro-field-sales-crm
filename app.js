@@ -329,7 +329,7 @@ S.customers.forEach(c=>{const l=S.leads.find(x=>x.customerId===c.id);if(l)c.sour
 
 S.vapeMarkup=Math.min(25,Math.max(15,Number(S.vapeMarkup)||25));
 S.vapePrivatePrices=S.vapePrivatePrices||{};
-function privateEk(p){const key=matchL3Key(p);const ek=key?Number(S.vapePrivatePrices?.[key]):NaN;return Number.isFinite(ek)&&ek>=0?ek:null}
+function privateEk(p){const direct=Number(p?.ek);if(Number.isFinite(direct)&&direct>=0)return direct;const key=matchL3Key(p);const ek=key?Number(S.vapePrivatePrices?.[key]):NaN;return Number.isFinite(ek)&&ek>=0?ek:null}
 function matchL3Key(p){const x=((p?.name||'')+' '+(p?.variant||'')).toLowerCase().replace(/\s+/g,' ');for(const [needle,key] of L3_RULES)if(x.includes(needle))return key;return null}
 function vapePrice(p){const ek=privateEk(p);return ek!==null?Math.round(ek*(1+S.vapeMarkup/100)*100)/100:null}
 function cartCount(){return S.vapeCart.reduce((n,x)=>n+(+x.qty||0),0)}
