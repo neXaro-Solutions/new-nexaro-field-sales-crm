@@ -320,7 +320,7 @@ const L3_RULES = [
  ['elfx mega 10ml','VP020'],['elfx mega 5ml','VP021'],['elfx mega','VP025'],['elfx pro','VP018'],['elfx mini','VP023'],['elfx 2','VP024'],['elfx v2.0','VP012'],['elfx','VP017'],
  ['elfliq','VP013'],['elfbar max','VP015']
 ];
-S.vapeProducts = VAPE_PRODUCTS.map(p=>({...p}));
+S.vapeProducts=Array.isArray(S.vapeProducts)&&S.vapeProducts.length?S.vapeProducts:VAPE_PRODUCTS.map(p=>({...p}));
 S.vapeCart=(S.vapeCart||[]).filter(x=>S.vapeProducts.some(p=>p.id===x.productId));
 S.vapeQuotes=S.vapeQuotes||[]; S.vapeInvoices=S.vapeInvoices||[];
 S.vapeQuoteSequence=S.vapeQuoteSequence||0; S.vapeInvoiceSequence=S.vapeInvoiceSequence||0;
