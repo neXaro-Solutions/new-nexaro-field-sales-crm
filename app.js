@@ -502,23 +502,7 @@ close('pricingDialog');
 quote(null,null,{tariff,tariffKey:key,tpv,items});
 
 };
-  const b=e.target.closest('[data-use-tariff]');
-  if(!b)return;
-  const tpv=+$('#pTpv').value||0;
-  const key=b.dataset.useTariff;
-  const hardwareList=+$('#pHardware').value||0;
-  const hardwareDiscount=Math.min(25,Math.max(0,+$('#pHardwareDiscount').value||0));
-  const hardwareSale=hardwareList-(hardwareList*hardwareDiscount/100);
-  const hardwareExtra=Math.max(0,+$('#pHardwareExtra').value||0);
-  const items=[];
-  if(key==='plus')items.push({description:'SumUp Zahlungen Plus – Monatsgebühr',qty:1,unit:'Monat',price:19,note:`SumUp Zahlungen Plus: 0,79 % auf berechtigte EWR-Verbraucherkarten. Berechnungsbasis: ${money(tpv)} monatliches Kartenzahlungsvolumen.`});
-  else items.push({description:'SumUp umsatzbasiertes Zahlen – Monatsgebühr',qty:1,unit:'Monat',price:0,note:`SumUp umsatzbasiertes Modell: 1,39 % auf Kartenzahlungen, 0 € Monatsgebühr. Berechnungsbasis: ${money(tpv)} monatliches Kartenzahlungsvolumen.`});
-  if(hardwareList){const name=SUMUP_HARDWARE.find(x=>x.price===hardwareList)?.name||'SumUp Hardware';items.push({description:`${name} – einmalige Hardware`,qty:1,unit:'Stück',price:hardwareSale,note:`Offizieller Listenpreis ${money(hardwareList)} · eigener neXaro Hardware-Rabatt ${hardwareDiscount}% · Angebotspreis ${money(hardwareSale)}.`})}
-  if(hardwareExtra)items.push({description:'Sonstiges Zubehör / Einmalgebühr',qty:1,unit:'Stück',price:hardwareExtra,note:'Einmalige Gebühr · kein Hardware-Rabatt hinterlegt.'});
-  const tariff={description:key==='plus'?'SumUp Zahlungen Plus – Monatsgebühr':'SumUp umsatzbasiertes Zahlen – Monatsgebühr',qty:1,unit:'Monat',price:key==='plus'?19:0,note:`SumUp Deutschland · neXaro Vertriebsschwelle 5.000 € · TPV ${money(tpv)}.`};
-  close('pricingDialog');
-  quote(null,null,{tariff,tariffKey:key,tpv,items});
-};
+  
 function commission(){calcCommission();open('commissionDialog')}
 function calcCommission(){const tpv=+$('#cTpv').value||0,hw=+$('#cHardware').value||0,sw=+$('#cSoftware').value||0,activation=tpv>=500?200:0,pay=(tpv*0.007*12)*0.5,topup30=Math.max(0,pay-activation),hardware=hw*0.5,software=sw*12*0.5,bonus=(+$('#cContracts').value?100:0)+(+$('#cPos').value?100:0)+(+$('#cChampion').value?100:0)+(+$('#cMaster').value?100:0),total=activation+topup30+hardware+software+bonus;$('#commissionResult').innerHTML=`<div class="result"><b>Aktivierung</b><strong>${money(activation)}</strong></div><div class="result"><b>Payments Top-Up 30</b><strong>${money(topup30)}</strong><small>mit 0,7% angenommener Net Revenue Margin</small></div><div class="result"><b>Hardware</b><strong>${money(hardware)}</strong></div><div class="result"><b>Software</b><strong>${money(software)}</strong></div><div class="result"><b>Boni</b><strong>${money(bonus)}</strong></div><div class="result"><b>Interne Deal-Summe</b><strong>${money(total)}</strong><small>Nur intern · Vertragsbedingungen haben Vorrang</small></div>`}
 $$('#commissionDialog input,#commissionDialog select').forEach(x=>x.oninput=calcCommission);
