@@ -181,41 +181,327 @@ $('#routeList').onclick=e=>{let i=e.target.closest('[data-route-up]')?.dataset.r
 $('#openRoute').onclick=()=>{const u=routeUrl();if(u)window.open(u,'_blank')};$('#saveRoute').onclick=saveRoutePlan;
 $('#savedRoutes').onclick=async e=>{const id=e.target.closest('[data-load-route]')?.dataset.loadRoute;if(id)return loadRoutePlan(id);const did=e.target.closest('[data-delete-route]')?.dataset.deleteRoute;if(did&&confirm('Gespeicherte Route löschen?')){S.routePlans=S.routePlans.filter(x=>x.id!==did);save();renderSavedRoutes();return}const oid=e.target.closest('[data-open-saved-route]')?.dataset.openSavedRoute;if(oid){const p=S.routePlans.find(x=>x.id===oid);if(!p)return;const pts=p.customerIds.map(id=>customerById(id)).filter(c=>Number.isFinite(+c?.lat)&&Number.isFinite(+c?.lon)).map(c=>`${c.lat},${c.lon}`);if(p.origin&&pts.length)window.open('https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(`${p.origin.lat},${p.origin.lon}`)+'&destination='+encodeURIComponent(pts.at(-1))+'&waypoints='+encodeURIComponent(pts.slice(0,-1).join('|'))+'&travelmode=driving','_blank')}};
 $('#prospectList').onclick=e=>{const b=e.target.closest('[data-prospect]');if(!b)return;const p=JSON.parse(decodeURIComponent(b.dataset.prospect));$('#leadForm').reset();$('#leadId').value='';$('#leadDialogTitle').textContent='Neuer SUMUP-Lead aus Gebiet';$('#fCompany').value=p.name;const pa=splitAddress(p.address||'');$('#fStreet').value=pa.street;$('#fZip').value=pa.zip;$('#fCity').value=pa.city;$('#fDue').value=today();$('#fStatus').value='neu';$('#fPriority').value='Mittel';hint();open('leadDialog')};
-const SUMUP_INTERNAL_THRESHOLD=5000;
+const SUMUP_PLUS_THRESHOLD=3500;
+
 const SUMUP_HARDWARE=[
-  {price:0,name:'Keine Hardware'},
-  {price:34,name:'Solo Lite'},
-  {price:79,name:'Solo'},
-  {price:169,name:'Terminal'},
-  {price:399,name:'SumUp Kasse / Register'}
+{price:0,name:'Keine Hardware'},
+{price:34,name:'Solo Lite'},
+{price:79,name:'Solo'},
+{price:169,name:'Terminal'},
+{price:399,name:'SumUp Kasse / Register'}
 ];
-function pricing(){ $('#pTpv').value=5000;$('#pHardwareDiscount').value=25;$('#pHardwareExtra').value=0;calcPricing();open('pricingDialog') }
-function calcPricing(){
-  const tpv=+$('#pTpv').value||0,rate=+$('#pCurrentRate').value||0,fixed=+$('#pCurrentFixed').value||0;
-  const hardwareList=+$('#pHardware').value||0;
-  const requestedDiscount=Math.min(25,Math.max(0,+$('#pHardwareDiscount').value||0));
-  $('#pHardwareDiscount').value=requestedDiscount;
-  const hardwareDiscount=hardwareList*requestedDiscount/100;
-  const hardwareSale=hardwareList-hardwareDiscount;
-  const hardwareExtra=Math.max(0,+$('#pHardwareExtra').value||0);
-  const oneTimeHardware=hardwareSale+hardwareExtra;
-  const current=tpv*rate/100+fixed;
-  const payg=tpv*0.0139;
-  const plus=tpv*0.0079+19;
-  const plans=[
-    {key:'payg',name:'SumUp umsatzbasiertes Zahlen',monthly:payg,description:'1,39 % auf Kartenzahlungen · 0 € Monatsgebühr',fee:'1,39%',fixed:0},
-    {key:'plus',name:'SumUp Zahlungen Plus',monthly:plus,description:'0,79 % auf berechtigte EWR-Verbraucherkarten · 19 € Monatsgebühr',fee:'0,79%',fixed:19}
-  ];
-  const recommended=tpv>=SUMUP_INTERNAL_THRESHOLD?'plus':'payg';
-  const hwLine=hardwareList?`<small>Hardware: ${money(hardwareList)} − ${money(hardwareDiscount)} Rabatt = <b>${money(hardwareSale)}</b>${hardwareExtra?` · Zubehör/Einmalgebühr: ${money(hardwareExtra)}`:''}</small>`:(hardwareExtra?`<small>Zubehör/Einmalgebühr: <b>${money(hardwareExtra)}</b> · rabattfrei</small>`:'<small>Keine einmalige Hardware hinterlegt</small>');
-  $('#pricingResult').innerHTML=
-    `<div class="result"><b>Aktuell</b><strong>${money(current)}/Monat</strong><small>nach deinen Eingaben</small></div>`+
-    `<div class="result"><b>Einmalige Hardware</b><strong>${money(oneTimeHardware)}</strong>${hwLine}</div>`+
-    plans.map(p=>{const firstMonth=p.monthly+oneTimeHardware,firstYear=p.monthly*12+oneTimeHardware;return `<div class="result tariff-result"><div><b>${esc(p.name)} ${p.key===recommended?'· EMPFOHLEN':''}</b><strong>${money(p.monthly)}/Monat</strong><small>${esc(p.description)}</small><small>1. Monat inkl. Hardware: <b>${money(firstMonth)}</b> · 1. Jahr inkl. Hardware: <b>${money(firstYear)}</b></small></div><button class="primary" data-use-tariff="${p.key}">💼 Ins Angebot</button></div>`}).join('')+
-    `<div class="qual-box qual-${recommended==='plus'?'A':'B'}"><b>Vertriebsempfehlung bei ${money(tpv)} TPV</b><br>${recommended==='plus'?'Zahlungen Plus':'Umsatzbasiertes Zahlen'} anhand der neXaro 5.000-€-Schwelle. <span class="muted">Die Hardware wird zusätzlich einmalig gerechnet und ist nicht Teil der monatlichen Tarifgebühr.</span></div>`;
+
+function pricing(){
+$('#pSumupCustomer').value='';
+$('#pProviderStatus').value='';
+$('#pProvider').value='';
+$('#pCurrentRate').value=0;
+$('#pCurrentFixed').value=0;
+$('#pTpv').value=0;
+$('#pEwrShare').value=100;
+$('#pOtherCardShare').value=0;
+$('#pNoSubscription').checked=false;
+$('#pHardware').value=0;
+$('#pHardwareDiscount').value=25;
+$('#pHardwareExtra').value=0;
+updatePricingProviderUI();
+calcPricing();
+open('pricingDialog');
 }
-$('#pTpv').oninput=calcPricing;$('#pCurrentRate').oninput=calcPricing;$('#pCurrentFixed').oninput=calcPricing;$('#pHardware').onchange=calcPricing;$('#pHardwareDiscount').oninput=calcPricing;$('#pHardwareExtra').oninput=calcPricing;
+
+function updatePricingProviderUI(){
+const status=$('#pProviderStatus').value;
+const fields=$('#pProviderFields');
+const hint=$('#pNoProviderHint');
+
+if(fields)fields.style.display=status==='other'?'block':'none';
+if(hint)hint.style.display=status==='none'?'block':'none';
+
+if(status==='none'){
+$('#pCurrentRate').value=0;
+$('#pCurrentFixed').value=0;
+}
+}
+
+function calcPricing(){
+
+const sumupCustomer=$('#pSumupCustomer').value;
+const providerStatus=$('#pProviderStatus').value;
+const tpv=+$('#pTpv').value||0;
+const rate=+$('#pCurrentRate').value||0;
+const fixed=+$('#pCurrentFixed').value||0;
+
+const ewrShare=Math.min(100,Math.max(0,+$('#pEwrShare').value||0));
+const otherShare=Math.min(100,Math.max(0,+$('#pOtherCardShare').value||0));
+const totalShare=ewrShare+otherShare;
+
+const hardwareList=+$('#pHardware').value||0;
+const requestedDiscount=Math.min(25,Math.max(0,+$('#pHardwareDiscount').value||0));
+
+$('#pHardwareDiscount').value=requestedDiscount;
+
+const hardwareDiscount=hardwareList*requestedDiscount/100;
+const hardwareSale=hardwareList-hardwareDiscount;
+const hardwareExtra=Math.max(0,+$('#pHardwareExtra').value||0);
+const oneTimeHardware=hardwareSale+hardwareExtra;
+
+const qualification=$('#pQualificationResult');
+
+if(sumupCustomer===''){
+
+qualification.className='qual-box';
+qualification.innerHTML='<b>Bitte zuerst qualifizieren.</b><br>Ist der Kunde bereits SumUp-Kunde?';
+
+$('#pricingResult').innerHTML='';
+return;
+
+}
+
+if(sumupCustomer==='ja'){
+
+qualification.className='qual-box qual-D';
+qualification.innerHTML='<b>🔴 Nicht qualifiziert – bereits SumUp-Kunde</b><br>Kein SumUp-Neukunden-Lead. Der Kontakt bleibt im CRM und kann weiterhin für VAPE oder andere Vertriebsaktivitäten genutzt werden.';
+
+$('#pricingResult').innerHTML=
+'<div class="result"><b>SumUp-Neukundenvertrieb</b><strong>Nicht qualifiziert</strong><small>Der Kunde nutzt bereits SumUp.</small></div>';
+
+return;
+
+}
+
+if(providerStatus===''){
+
+qualification.className='qual-box';
+qualification.innerHTML='<b>Schritt 2:</b> Bitte angeben, ob bereits ein Zahlungsanbieter vorhanden ist.';
+
+$('#pricingResult').innerHTML='';
+return;
+
+}
+
+if(totalShare>100){
+
+qualification.className='qual-box qual-D';
+qualification.innerHTML='<b>Bitte Kartenanteile prüfen.</b><br>EWR-Verbraucherkarten und sonstige Karten dürfen zusammen höchstens 100 % ergeben.';
+
+$('#pricingResult').innerHTML='';
+return;
+
+}
+
+const current=providerStatus==='none'?0:tpv*rate/100+fixed;
+
+const payg=tpv*0.0139;
+
+const plusEligible=tpv>=SUMUP_PLUS_THRESHOLD;
+
+const plusVariable=
+tpv*(ewrShare/100*0.0079+(otherShare/100)*0.0139);
+
+const plus=plusVariable+19;
+
+const noSubscription=$('#pNoSubscription').checked;
+
+const recommended=plusEligible&&!noSubscription?'plus':'payg';
+
+const currentLabel=
+providerStatus==='none'
+?'Noch kein Zahlungsanbieter · aktuelle Kosten 0,00 €'
+:`${esc($('#pProvider').value.trim()||'Anderer Zahlungsanbieter')} · ${money(current)}/Monat`;
+
+const hwLine=hardwareList
+?`<small>Hardware: ${money(hardwareList)} − ${money(hardwareDiscount)} Rabatt = <b>${money(hardwareSale)}</b>${hardwareExtra?` · Zubehör/Einmalgebühr: ${money(hardwareExtra)}`:''}</small>`
+:(hardwareExtra
+?`<small>Zubehör/Einmalgebühr: <b>${money(hardwareExtra)}</b> · rabattfrei</small>`
+:'<small>Keine einmalige Hardware hinterlegt</small>');
+
+const plans=[
+{
+key:'plus',
+name:'SumUp Zahlungen Plus',
+monthly:plus,
+description:'Abo · 19 €/Monat oder 199 €/Jahr · jederzeit kündbar',
+fee:'0,79 %',
+fixed:19,
+detail:`0,79 % auf ${ewrShare}% EWR-Verbraucherkarten · 1,39 % auf sonstige Karten`
+},
+{
+key:'payg',
+name:'SumUp umsatzbasiertes Zahlen',
+monthly:payg,
+description:'0 € Monatsgebühr · 1,39 % auf Vor-Ort-Zahlungen',
+fee:'1,39 %',
+fixed:0,
+detail:'Keine monatlichen Fixkosten'
+}
+];
+
+const savings= current-recommended==='plus'
+?current-plus
+:current-payg;
+
+qualification.className=`qual-box qual-${recommended==='plus'?'A':'B'}`;
+
+if(noSubscription){
+
+qualification.innerHTML=
+'<b>🟠 Kundenpräferenz: keine monatlichen Fixkosten</b><br>'+
+'Das umsatzbasierte Modell wird deshalb als passende Lösung empfohlen.';
+
+}else if(recommended==='plus'){
+
+qualification.innerHTML=
+'<b>⭐ Empfohlene Lösung: SumUp Zahlungen Plus</b><br>'+
+`Bei ${money(tpv)} monatlichem TPV liegt der Kunde über der veröffentlichten Plus-Schwelle von ${money(SUMUP_PLUS_THRESHOLD)}.`;
+
+}else{
+
+qualification.innerHTML=
+'<b>⭐ Empfohlene Lösung: Umsatzbasiertes Zahlen</b><br>'+
+`Bei ${money(tpv)} monatlichem TPV ist das umsatzbasierte Modell die passende Einstiegslösung.`;
+}
+
+$('#pricingResult').innerHTML=
+`<div class="result">
+<b>Aktuelle Situation</b>
+<strong>${money(current)}/Monat</strong>
+<small>${currentLabel}</small>
+</div>`+
+
+`<div class="result">
+<b>Einmalige Hardware</b>
+<strong>${money(oneTimeHardware)}</strong>
+${hwLine}
+</div>`+
+
+plans.map(p=>{
+
+const firstMonth=p.monthly+oneTimeHardware;
+const firstYear=p.monthly*12+oneTimeHardware;
+const recommendedLabel=p.key===recommended?'⭐ EMPFOHLEN':'Alternative';
+
+return `<div class="result tariff-result">
+<div>
+<b>${esc(p.name)} · ${recommendedLabel}</b>
+<strong>${money(p.monthly)}/Monat</strong>
+<small>${esc(p.description)}</small>
+<small>${esc(p.detail)}</small>
+<small>1. Monat inkl. Hardware: <b>${money(firstMonth)}</b> · 1. Jahr inkl. Hardware: <b>${money(firstYear)}</b></small>
+</div>
+<button class="${p.key===recommended?'primary':'secondary'}" data-use-tariff="${p.key}">💼 Ins Angebot</button>
+</div>`;
+
+}).join('')+
+
+`<div class="qual-box">
+<b>Vergleich</b><br>
+Aktuelle Kosten: <b>${money(current)}/Monat</b><br>
+Empfohlene SumUp-Lösung: <b>${money(recommended==='plus'?plus:payg)}/Monat</b><br>
+${savings>0
+?`Potenzielle Ersparnis: <b>${money(savings)}/Monat</b> · <b>${money(savings*12)}/Jahr</b>`
+:'Keine rechnerische Ersparnis gegenüber den aktuellen Kosten.'}
+</div>`;
+
+}
+
+$('#pSumupCustomer').onchange=calcPricing;
+$('#pProviderStatus').onchange=()=>{updatePricingProviderUI();calcPricing()};
+$('#pProvider').oninput=calcPricing;
+$('#pCurrentRate').oninput=calcPricing;
+$('#pCurrentFixed').oninput=calcPricing;
+$('#pTpv').oninput=calcPricing;
+$('#pEwrShare').oninput=calcPricing;
+$('#pOtherCardShare').oninput=calcPricing;
+$('#pNoSubscription').onchange=calcPricing;
+$('#pHardware').onchange=calcPricing;
+$('#pHardwareDiscount').oninput=calcPricing;
+$('#pHardwareExtra').oninput=calcPricing;
+
 $('#pricingResult').onclick=e=>{
+
+const b=e.target.closest('[data-use-tariff]');
+if(!b)return;
+
+if($('#pSumupCustomer').value!=='nein'){
+toast('Nur für SumUp-Neukunden verfügbar');
+return;
+}
+
+const tpv=+$('#pTpv').value||0;
+const key=b.dataset.useTariff;
+
+const hardwareList=+$('#pHardware').value||0;
+const hardwareDiscount=Math.min(25,Math.max(0,+$('#pHardwareDiscount').value||0));
+const hardwareSale=hardwareList-(hardwareList*hardwareDiscount/100);
+const hardwareExtra=Math.max(0,+$('#pHardwareExtra').value||0);
+
+const items=[];
+
+if(key==='plus'){
+
+items.push({
+description:'SumUp Zahlungen Plus – Monatsgebühr',
+qty:1,
+unit:'Monat',
+price:19,
+note:`SumUp Zahlungen Plus · 0,79 % auf berechtigte EWR-Verbraucherkarten · 1,39 % auf sonstige Karten · TPV ${money(tpv)}. Abo jederzeit kündbar.`
+});
+
+}else{
+
+items.push({
+description:'SumUp umsatzbasiertes Zahlen',
+qty:1,
+unit:'Monat',
+price:0,
+note:`1,39 % auf Vor-Ort-Zahlungen · 0 € Monatsgebühr · TPV ${money(tpv)}.`
+});
+
+}
+
+if(hardwareList){
+
+const name=SUMUP_HARDWARE.find(x=>x.price===hardwareList)?.name||'SumUp Hardware';
+
+items.push({
+description:`${name} – einmalige Hardware`,
+qty:1,
+unit:'Stück',
+price:hardwareSale,
+note:`Listenpreis ${money(hardwareList)} · neXaro Hardware-Rabatt ${hardwareDiscount}% · Angebotspreis ${money(hardwareSale)}.`
+});
+
+}
+
+if(hardwareExtra){
+
+items.push({
+description:'Sonstiges Zubehör / Einmalgebühr',
+qty:1,
+unit:'Stück',
+price:hardwareExtra,
+note:'Einmalige Gebühr · kein Hardware-Rabatt.'
+});
+
+}
+
+const tariff={
+description:key==='plus'
+?'SumUp Zahlungen Plus – Monatsgebühr'
+:'SumUp umsatzbasiertes Zahlen',
+qty:1,
+unit:'Monat',
+price:key==='plus'?19:0,
+note:key==='plus'
+?'SumUp Zahlungen Plus · 19 €/Monat oder 199 €/Jahr · jederzeit kündbar.'
+:'SumUp umsatzbasiertes Zahlen · 1,39 % Vor-Ort-Zahlungsgebühr · 0 € Monatsgebühr.'
+};
+
+close('pricingDialog');
+
+quote(null,null,{tariff,tariffKey:key,tpv,items});
+
+};
   const b=e.target.closest('[data-use-tariff]');
   if(!b)return;
   const tpv=+$('#pTpv').value||0;
