@@ -275,7 +275,7 @@ $('#pEwrShare').value=100;
 $('#pOtherCardShare').value=0;
 $('#pNoSubscription').checked=false;
 $('#pHardware').value=0;
-$('#pHardwareDiscount').value=25;
+$('#pHardwareDiscount').value=0;
 $('#pHardwareExtra').value=0;
 updatePricingProviderUI();
 calcPricing();
