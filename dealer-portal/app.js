@@ -16,11 +16,26 @@ async function loadSession(){
 async function enter(user){
   const {data,error}=await sb.from('dealers').select('id,company_name,dealer_code,margin_percent,status').eq('auth_user_id',user.id).maybeSingle();
   if(error||!data||data.status!=='freigeschaltet'){await sb.auth.signOut();showLogin();msg('loginMsg',data?'Dein Händlerzugang ist noch nicht freigeschaltet.':'Für diesen Benutzer ist kein Händlerkonto hinterlegt.');return;}
-  dealer=data; $('login').classList.add('hidden'); $('shop').classList.remove('hidden'); $('logout').classList.remove('hidden');
+  dealer=data; $('login').classList.add('hidden'); $('register').classList.add('hidden'); $('shop').classList.remove('hidden'); $('logout').classList.remove('hidden');
   $('dealerName').textContent=data.company_name; $('dealerMeta').textContent=`Händlernummer ${data.dealer_code} · persönlicher Händlerpreis`;
   await loadCatalog();
 }
-function showLogin(){$('login').classList.remove('hidden');$('shop').classList.add('hidden');$('logout').classList.add('hidden');}
+function showLogin(){$('login').classList.remove('hidden');$('register').classList.add('hidden');$('shop').classList.add('hidden');$('logout').classList.add('hidden');}
+function showRegister(){ $('login').classList.add('hidden'); $('register').classList.remove('hidden'); $('loginMsg').textContent=''; $('registerMsg').textContent=''; }
+async function registerDealer(){
+  const company=$('regCompany').value.trim(), contact=$('regContact').value.trim(), email=$('regEmail').value.trim().toLowerCase(), phone=$('regPhone').value.trim(), password=$('regPassword').value;
+  if(!company||!contact||!email||password.length<8){msg('registerMsg','Bitte Firma, Ansprechpartner, gültige E-Mail und ein Passwort mit mindestens 8 Zeichen eingeben.');return;}
+  $('registerBtn').disabled=true; $('registerBtn').textContent='Registrierung…'; msg('registerMsg','');
+  const {data,error}=await sb.auth.signUp({email,password});
+  if(error){$('registerBtn').disabled=false;$('registerBtn').textContent='Registrierung absenden';msg('registerMsg',error.message);return;}
+  const uid=data.user?.id;
+  if(!uid){$('registerBtn').disabled=false;$('registerBtn').textContent='Registrierung absenden';msg('registerMsg','Die Registrierung konnte nicht angelegt werden.');return;}
+  const {error:regError}=await sb.from('dealer_registrations').insert({auth_user_id:uid,company_name:company,contact_name:contact,email,phone:phone||null,status:'pending'});
+  $('registerBtn').disabled=false; $('registerBtn').textContent='Registrierung absenden';
+  if(regError){msg('registerMsg','Das Konto wurde angelegt, aber die Händleranfrage konnte nicht gespeichert werden. Bitte kontaktiere uns.');return;}
+  $('register').querySelectorAll('input').forEach(i=>i.value='');
+  msg('registerMsg','Registrierung erfolgreich. Dein Händlerzugang wird nach Prüfung freigeschaltet.',true);
+}
 async function loadCatalog(){
   const {data,error}=await sb.rpc('get_my_dealer_catalog');
   if(error){$('products').innerHTML='<div class="card">Katalog konnte nicht geladen werden.</div>';return;}
@@ -34,6 +49,6 @@ function updateCartCount(){$('cartCount').textContent=[...cart.values()].reduce(
 function cartRows(){return [...cart.entries()].map(([id,qty])=>{const p=catalog.find(x=>x.id===id);return p?{p,qty}:null}).filter(Boolean)}
 function renderCart(){const rows=cartRows();$('cartItems').innerHTML=rows.map(({p,qty})=>`<div class="cart-row"><div><b>${esc(p.name)}</b><br><small>${esc(p.article_no)} · ${euro(p.price_net)} netto</small></div><div class="qty"><button class="ghost" data-dec="${p.id}">−</button><b>${qty}</b><button class="ghost" data-inc="${p.id}">+</button></div></div>`).join('')||'<p>Warenkorb ist leer.</p>';const total=rows.reduce((s,{p,qty})=>s+p.price_net*qty,0);$('cartTotal').textContent=euro(total);document.querySelectorAll('[data-inc]').forEach(b=>b.onclick=()=>{add(b.dataset.inc);renderCart()});document.querySelectorAll('[data-dec]').forEach(b=>b.onclick=()=>{const n=(cart.get(b.dataset.dec)||1)-1;if(n<=0)cart.delete(b.dataset.dec);else cart.set(b.dataset.dec,n);updateCartCount();renderCart()});}
 $('loginBtn').onclick=async()=>{msg('loginMsg','');const email=$('email').value.trim(),password=$('password').value;if(!email||!password)return msg('loginMsg','Bitte E-Mail und Passwort eingeben.');$('loginBtn').disabled=true;$('loginBtn').textContent='Anmeldung…';const {data,error}=await sb.auth.signInWithPassword({email,password});$('loginBtn').disabled=false;$('loginBtn').textContent='Einloggen';if(error)return msg('loginMsg','Anmeldung fehlgeschlagen. Bitte E-Mail und Passwort prüfen.');await enter(data.user)};
-$('logout').onclick=()=>sb.auth.signOut();$('search').oninput=render;$('category').onchange=render;$('openCart').onclick=()=>{renderCart();$('cartDialog').showModal()};$('closeCart').onclick=()=>$('cartDialog').close();
+$('registerToggle').onclick=showRegister;$('backToLogin').onclick=showLogin;$('registerBtn').onclick=registerDealer;$('logout').onclick=()=>sb.auth.signOut();$('search').oninput=render;$('category').onchange=render;$('openCart').onclick=()=>{renderCart();$('cartDialog').showModal()};$('closeCart').onclick=()=>$('cartDialog').close();
 $('orderBtn').onclick=async()=>{const rows=cartRows();if(!rows.length)return msg('orderMsg','Warenkorb ist leer.');msg('orderMsg','Bestellung wird gesendet…');const {data,error}=await sb.rpc('place_dealer_order',{p_items:rows.map(({p,qty})=>({product_id:p.id,quantity:qty})),p_note:$('note').value.trim()||null});if(error)return msg('orderMsg','Bestellung konnte nicht gesendet werden.');cart.clear();updateCartCount();$('note').value='';msg('orderMsg',`Bestellung ${String(data).slice(0,8)}… wurde übermittelt.`);renderCart();};
 loadSession();
