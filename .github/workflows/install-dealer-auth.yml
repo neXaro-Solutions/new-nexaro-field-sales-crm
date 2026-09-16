@@ -1,6 +1,8 @@
 name: Wire dealer auth
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - sumup-tarifvergleich-v2
 
 jobs:
   wire:
