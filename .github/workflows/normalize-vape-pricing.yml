@@ -1,0 +1,47 @@
+name: Normalize VAPE pricing
+on:
+  push:
+    branches:
+      - sumup-tarifvergleich-v2
+permissions:
+  contents: write
+jobs:
+  normalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update VAPE pricing UI and logic
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app.js')
+          s=p.read_text(encoding='utf-8')
+          old='function vapePrice(p){const ek=privateEk(p);return ek!==null?Math.round(ek*(1+S.vapeMarkup/100)*100)/100:null}'
+          new='function vapePrice(p){const ek=privateEk(p);const m=Math.min(25,Math.max(15,Number(S.vapeMarkup)||25));return ek!==null&&ek>=0?Math.round((ek/(1-m/100))*100)/100:null}'
+          if old not in s:
+              raise SystemExit('vapePrice pattern not found')
+          s=s.replace(old,new,1)
+          s=s.replace('<span class="badge">+ ${S.vapeMarkup}% EK</span>','<span class="badge">Marge ${S.vapeMarkup}%</span>')
+          s=s.replace('<span class="chip">intern. Aufschlag ${S.vapeMarkup}%</span>','<span class="chip">interne Marge ${S.vapeMarkup}%</span>')
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('Aufschlag auf EK <input id="vapeMarkup"','VAPE-Marge <input id="vapeMarkup"')
+          s=s.replace('<p class="muted">L3-EK wird ausschließlich lokal importiert und nicht im öffentlichen GitHub-Code gespeichert.</p>','<p class="muted">Die VAPE-Einkaufspreise werden direkt aus der Händler-CSV übernommen. Eine separate L3-EK-Datei ist nicht mehr erforderlich.</p>')
+          old='<label class="secondary" style="display:inline-block;padding:10px 12px;cursor:pointer">🔒 L3-EK importieren<input id="importL3" type="file" accept=".json,application/json" hidden></label>'
+          if old not in s:
+              raise SystemExit('L3 upload UI pattern not found')
+          s=s.replace(old,'',1)
+          s=s.replace('<div id="vapeL3Status" class="muted">Noch keine private L3-Datei geladen</div>','',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app.js index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Use CSV EK for VAPE pricing and remove L3 upload"
+          git push
