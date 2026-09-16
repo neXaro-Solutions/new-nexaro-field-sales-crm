@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>neXaro Solutions · Händlerportal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar"><div><div class="eyebrow">VAPE · B2B</div><h1>neXaro Händlerportal</h1></div><button id="logout" class="ghost hidden">Abmelden</button></header>
+  <main>
+    <section id="login" class="card login-card">
+      <div class="eyebrow">GESCHÜTZTER B2B-BEREICH</div><h2>Händler-Login</h2>
+      <p>Nur freigeschaltete Händler erhalten Zugriff auf Katalog, persönliche Preise und Bestellungen.</p>
+      <label>E-Mail<input id="email" type="email" autocomplete="username" placeholder="händler@firma.de"></label>
+      <label>Passwort<input id="password" type="password" autocomplete="current-password"></label>
+      <button id="loginBtn" class="primary">Einloggen</button><div id="loginMsg" class="msg"></div>
+    </section>
+
+    <section id="shop" class="hidden">
+      <div class="hero card"><div><div class="eyebrow">HÄNDLERBEREICH</div><h2 id="dealerName">Händler</h2><p id="dealerMeta"></p></div><button id="openCart" class="primary">🛒 Warenkorb <span id="cartCount">0</span></button></div>
+      <div class="toolbar card"><input id="search" placeholder="Produkte suchen …"><select id="category"><option value="">Alle Kategorien</option></select></div>
+      <div id="products" class="grid"></div>
+    </section>
+  </main>
+
+  <dialog id="cartDialog"><div class="dialog-head"><h2>Warenkorb</h2><button id="closeCart" class="ghost">✕</button></div><div id="cartItems"></div><div class="total"><span>Netto</span><b id="cartTotal">0,00 €</b></div><label>Bestellhinweis<textarea id="note" rows="3" placeholder="Optional"></textarea></label><button id="orderBtn" class="primary">Bestellung absenden</button><div id="orderMsg" class="msg"></div></dialog>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
