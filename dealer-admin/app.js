@@ -2,7 +2,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const SUPABASE_URL='https://hbuqzdmjqvgybwohfnqy.supabase.co';
 const SUPABASE_KEY='sb_publishable_zoRbvS06zi6X4_shxXQkMg_O7h0Go6r';
-const VAPID_PUBLIC_KEY='BK2MOzssJIltbFpS4J21CvakIvSDRGzVJAHN5j7HPY0TdPl8AyBL_tB8JXlktbIRcj3zsdwDyH41zoJD35gJ840';
+const VAPID_PUBLIC_KEY='BMY4ZImAXi6v35cNF0KhID3IXidItW0J-YEVa3xQE1Y2vZC0C7TQUr7lPgAvLO82gR_oTVwBX4Nx79pK7Tzw3Y8';
 const sb=createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
 const euro=n=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(Number(n)||0);
@@ -87,6 +87,16 @@ async function updatePushState(){
   try{
     const reg=await navigator.serviceWorker.getRegistration('./');
     const sub=reg?await reg.pushManager.getSubscription():null;
+    const keyVersion=localStorage.getItem('nexaro_vapid_public_key');
+    if(sub && keyVersion!==VAPID_PUBLIC_KEY){
+      try{
+        await sub.unsubscribe();
+        await sb.from('push_subscriptions').delete().eq('endpoint',sub.endpoint);
+      }catch(_){ }
+      localStorage.removeItem('nexaro_vapid_public_key');
+      btn.textContent='🔔 Push neu aktivieren';btn.disabled=false;btn.classList.remove('push-active');
+      return;
+    }
     if(sub){btn.textContent='🔔 Push aktiv';btn.disabled=true;btn.classList.add('push-active');}
     else{btn.textContent='🔔 Push aktivieren';btn.disabled=false;btn.classList.remove('push-active');}
   }catch(e){btn.textContent='🔔 Push aktivieren';btn.disabled=false;}
@@ -102,12 +112,17 @@ async function enablePush(){
     const reg=await navigator.serviceWorker.register('./sw.js');
     await navigator.serviceWorker.ready;
     let sub=await reg.pushManager.getSubscription();
+    if(sub && localStorage.getItem('nexaro_vapid_public_key')!==VAPID_PUBLIC_KEY){
+      try{await sub.unsubscribe();await sb.from('push_subscriptions').delete().eq('endpoint',sub.endpoint);}catch(_){ }
+      sub=null;
+    }
     if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
     const json=sub.toJSON();
     const {data:{session}}=await sb.auth.getSession();
     if(!session)throw new Error('Keine Anmeldung vorhanden.');
     const {error}=await sb.from('push_subscriptions').upsert({user_id:session.user.id,endpoint:json.endpoint,p256dh:json.keys.p256dh,auth:json.keys.auth,updated_at:new Date().toISOString()},{onConflict:'endpoint'});
     if(error)throw error;
+    localStorage.setItem('nexaro_vapid_public_key',VAPID_PUBLIC_KEY);
     $('pushStatus').textContent='Push-Benachrichtigungen sind aktiviert.';
     btn.textContent='🔔 Push aktiv';btn.classList.add('push-active');
   }catch(e){
