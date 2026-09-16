@@ -20,3 +20,4 @@ function boot(){addEntryButton();applyMargin();setTimeout(addEntryButton,500);se
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 window.neXaroDealer={version:'1.1.0',getDealers:()=>dealers,current:()=>current(),setCurrent:id=>{if(dealers.some(d=>d.id===id)){currentId=id;localStorage.setItem(KEY+'-current',id);applyMargin();return true}return false},getMargin:id=>clamp((dealers.find(d=>d.id===id)||current()||{}).margin),priceFromEk:(ek,margin)=>{const m=clamp(margin);return Number(ek)>0?Number(ek)/(1-m/100):0}};
 })();
+/* integration trigger */
