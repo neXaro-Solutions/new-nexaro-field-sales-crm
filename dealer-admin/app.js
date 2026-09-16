@@ -2,16 +2,17 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const SUPABASE_URL='https://hbuqzdmjqvgybwohfnqy.supabase.co';
 const SUPABASE_KEY='sb_publishable_zoRbvS06zi6X4_shxXQkMg_O7h0Go6r';
+const VAPID_PUBLIC_KEY='BK2MOzssJIltbFpS4J21CvakIvSDRGzVJAHN5j7HPY0TdPl8AyBL_tB8JXlktbIRcj3zsdwDyH41zoJD35gJ840';
 const sb=createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
 const euro=n=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(Number(n)||0);
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
 const fmt=d=>d?new Intl.DateTimeFormat('de-DE',{dateStyle:'medium',timeStyle:'short'}).format(new Date(d)):'—';
 
 function msg(t){$('status').textContent=t||'';}
 function loginMsg(t){$('loginMsg').textContent=t||'';}
-function showLogin(){ $('login').classList.remove('hidden'); $('admin').classList.add('hidden'); $('logout').classList.add('hidden'); }
-function showAdmin(){ $('login').classList.add('hidden'); $('admin').classList.remove('hidden'); $('logout').classList.remove('hidden'); loadRegistrations(); }
+function showLogin(){ $('login').classList.remove('hidden'); $('admin').classList.add('hidden'); $('logout').classList.add('hidden'); $('pushBtn').classList.add('hidden'); }
+function showAdmin(){ $('login').classList.add('hidden'); $('admin').classList.remove('hidden'); $('logout').classList.remove('hidden'); $('pushBtn').classList.remove('hidden'); loadRegistrations(); updatePushState(); }
 
 async function checkStaff(){
   const {data:{session}}=await sb.auth.getSession();
@@ -30,7 +31,7 @@ async function loadRegistrations(){
 }
 
 function render(rows){
-  const pending=rows.filter(r=>r.status==='pending'), other=rows.filter(r=>r.status!=='pending');
+  const pending=rows.filter(r=>r.status==='pending');
   $('registrations').innerHTML=`
     <div class="stats"><div class="stat"><span>Offen</span><b>${pending.length}</b></div><div class="stat"><span>Freigeschaltet</span><b>${rows.filter(r=>r.status==='approved').length}</b></div><div class="stat"><span>Abgelehnt</span><b>${rows.filter(r=>r.status==='rejected').length}</b></div></div>
     ${rows.length?rows.map(r=>card(r)).join(''):'<div class="card empty">Noch keine Händlerregistrierungen.</div>'}`;
@@ -68,6 +69,54 @@ async function reject(id){
   await loadRegistrations();
 }
 
+function urlBase64ToUint8Array(base64String){
+  const padding='='.repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(base64);
+  return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
+}
+
+function pushSupported(){
+  return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+}
+
+async function updatePushState(){
+  const btn=$('pushBtn');
+  if(!btn)return;
+  if(!pushSupported()){btn.textContent='🔔 Push nicht verfügbar';btn.disabled=true;return;}
+  try{
+    const reg=await navigator.serviceWorker.getRegistration('./');
+    const sub=reg?await reg.pushManager.getSubscription():null;
+    if(sub){btn.textContent='🔔 Push aktiv';btn.disabled=true;btn.classList.add('push-active');}
+    else{btn.textContent='🔔 Push aktivieren';btn.disabled=false;btn.classList.remove('push-active');}
+  }catch(e){btn.textContent='🔔 Push aktivieren';btn.disabled=false;}
+}
+
+async function enablePush(){
+  const btn=$('pushBtn');
+  if(!pushSupported())return;
+  btn.disabled=true;btn.textContent='Push wird eingerichtet …';
+  try{
+    const permission=await Notification.requestPermission();
+    if(permission!=='granted'){btn.disabled=false;btn.textContent='🔔 Push aktivieren';$('pushStatus').textContent='Push-Berechtigung wurde nicht erteilt.';return;}
+    const reg=await navigator.serviceWorker.register('./sw.js');
+    await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
+    const json=sub.toJSON();
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session)throw new Error('Keine Anmeldung vorhanden.');
+    const {error}=await sb.from('push_subscriptions').upsert({user_id:session.user.id,endpoint:json.endpoint,p256dh:json.keys.p256dh,auth:json.keys.auth,updated_at:new Date().toISOString()},{onConflict:'endpoint'});
+    if(error)throw error;
+    $('pushStatus').textContent='Push-Benachrichtigungen sind aktiviert.';
+    btn.textContent='🔔 Push aktiv';btn.classList.add('push-active');
+  }catch(e){
+    console.error(e);
+    $('pushStatus').textContent='Push konnte nicht aktiviert werden: '+(e?.message||'Unbekannter Fehler');
+    btn.disabled=false;btn.textContent='🔔 Push aktivieren';
+  }
+}
+
 $('loginBtn').onclick=async()=>{
   loginMsg('');$('loginBtn').disabled=true;$('loginBtn').textContent='Anmeldung …';
   const {data,error}=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
@@ -77,6 +126,7 @@ $('loginBtn').onclick=async()=>{
 };
 $('logout').onclick=()=>sb.auth.signOut();
 $('refresh').onclick=loadRegistrations;
+$('pushBtn').onclick=enablePush;
 document.addEventListener('input',e=>{const id=e.target.dataset.margin;if(id){document.querySelector(`[data-margin-value="${CSS.escape(id)}"]`).textContent=`${e.target.value} %`;}});
 sb.auth.onAuthStateChange((_event)=>checkStaff());
 checkStaff();
