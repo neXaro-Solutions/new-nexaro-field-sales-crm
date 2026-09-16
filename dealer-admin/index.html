@@ -4,11 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#08111f">
+<link rel="manifest" href="manifest.webmanifest">
 <title>neXaro · Händlerverwaltung</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="topbar"><div><div class="eyebrow">neXaro Solutions</div><h1>Händlerverwaltung</h1><p>Interne Freischaltung für das Händlerportal</p></div><button id="logout" class="secondary hidden">Abmelden</button></header>
+<header class="topbar"><div><div class="eyebrow">neXaro Solutions</div><h1>Händlerverwaltung</h1><p>Interne Freischaltung für das Händlerportal</p></div><div class="top-actions"><button id="pushBtn" class="secondary hidden">🔔 Push aktivieren</button><button id="logout" class="secondary hidden">Abmelden</button></div></header>
 <main>
 <section id="login" class="card login-card">
   <div class="eyebrow">INTERN</div><h2>CRM-Zugang</h2>
@@ -20,6 +21,7 @@
 </section>
 <section id="admin" class="hidden">
   <div class="section-head"><div><div class="eyebrow">HÄNDLERANFRAGEN</div><h2>Registrierungen</h2></div><button id="refresh" class="secondary">↻ Aktualisieren</button></div>
+  <div id="pushStatus" class="push-status"></div>
   <div id="status" class="msg"></div>
   <div id="registrations"></div>
 </section>
