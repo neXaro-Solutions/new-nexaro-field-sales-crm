@@ -2,7 +2,17 @@
   // The internal CRM must remain accessible. The dealer login is only activated
   // explicitly for the protected dealer portal via ?dealer=1.
   const dealerPortal = new URLSearchParams(location.search).get('dealer') === '1';
-  if (!dealerPortal) return;
+  if (!dealerPortal) {
+    const showDashboard = () => {
+      document.querySelectorAll('.screen').forEach(x => x.classList.remove('active'));
+      document.querySelector('#dashboard')?.classList.add('active');
+      document.querySelectorAll('#nav button').forEach(x => x.classList.toggle('active', x.dataset.screen === 'dashboard'));
+      window.scrollTo(0, 0);
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', showDashboard, {once:true});
+    else showDashboard();
+    return;
+  }
 
   const SUPABASE_URL = 'https://hbuqzdmjqvgybwohfnqy.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_zoRbvS06zi6X4_shxXQkMg_O7h0Go6r';
