@@ -52,8 +52,9 @@ async function approve(id){
   const margin=Number(slider?.value||25);
   if(!confirm(`Händler freischalten und ${margin}% VAPE-Marge setzen?`))return;
   msg('Freischaltung wird durchgeführt …');
-  const {error}=await sb.rpc('approve_dealer_registration',{p_registration_id:id,p_margin:margin});
+  const {data,error}=await sb.functions.invoke('approve-dealer-registration',{body:{p_registration_id:id,p_margin:margin}});
   if(error){msg('Freischaltung fehlgeschlagen: '+error.message);return;}
+  if(!data?.dealer){msg('Freischaltung fehlgeschlagen: Keine Händlerdaten zurückgegeben.');return;}
   msg('Händler wurde freigeschaltet.');
   await loadRegistrations();
 }
