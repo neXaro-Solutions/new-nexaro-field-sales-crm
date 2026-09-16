@@ -14,7 +14,22 @@
       <p>Nur freigeschaltete Händler erhalten Zugriff auf Katalog, persönliche Preise und Bestellungen.</p>
       <label>E-Mail<input id="email" type="email" autocomplete="username" placeholder="händler@firma.de"></label>
       <label>Passwort<input id="password" type="password" autocomplete="current-password"></label>
-      <button id="loginBtn" class="primary">Einloggen</button><div id="loginMsg" class="msg"></div>
+      <button id="loginBtn" class="primary">Einloggen</button>
+      <button id="registerToggle" class="secondary" type="button">Noch kein Händlerkonto? Registrieren</button>
+      <div id="loginMsg" class="msg"></div>
+    </section>
+
+    <section id="register" class="card login-card hidden">
+      <div class="eyebrow">HÄNDLER-REGISTRIERUNG</div><h2>Händlerzugang anfordern</h2>
+      <p>Registriere dein Unternehmen. Nach Prüfung wird der B2B-Zugang freigeschaltet.</p>
+      <label>Firma<input id="regCompany" autocomplete="organization" required></label>
+      <label>Ansprechpartner<input id="regContact" autocomplete="name" required></label>
+      <label>E-Mail<input id="regEmail" type="email" autocomplete="email" required></label>
+      <label>Telefon<input id="regPhone" type="tel" autocomplete="tel"></label>
+      <label>Passwort<input id="regPassword" type="password" minlength="8" autocomplete="new-password" required></label>
+      <button id="registerBtn" class="primary">Registrierung absenden</button>
+      <button id="backToLogin" class="secondary" type="button">Zurück zum Login</button>
+      <div id="registerMsg" class="msg"></div>
     </section>
 
     <section id="shop" class="hidden">
