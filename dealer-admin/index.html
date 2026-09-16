@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#08111f">
+<title>neXaro · Händlerverwaltung</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar"><div><div class="eyebrow">neXaro Solutions</div><h1>Händlerverwaltung</h1><p>Interne Freischaltung für das Händlerportal</p></div><button id="logout" class="secondary hidden">Abmelden</button></header>
+<main>
+<section id="login" class="card login-card">
+  <div class="eyebrow">INTERN</div><h2>CRM-Zugang</h2>
+  <p class="muted">Nur für freigeschaltete neXaro-Mitarbeiter.</p>
+  <label>E-Mail<input id="email" type="email" autocomplete="username"></label>
+  <label>Passwort<input id="password" type="password" autocomplete="current-password"></label>
+  <button id="loginBtn" class="primary wide">Einloggen</button>
+  <p id="loginMsg" class="msg"></p>
+</section>
+<section id="admin" class="hidden">
+  <div class="section-head"><div><div class="eyebrow">HÄNDLERANFRAGEN</div><h2>Registrierungen</h2></div><button id="refresh" class="secondary">↻ Aktualisieren</button></div>
+  <div id="status" class="msg"></div>
+  <div id="registrations"></div>
+</section>
+</main>
+<script type="module" src="app.js"></script>
+</body>
+</html>
