@@ -712,7 +712,7 @@ S.vapeMarkup=Math.min(25,Math.max(15,Number(S.vapeMarkup)||25));
 S.vapePrivatePrices=S.vapePrivatePrices||{};
 function privateEk(p){const direct=Number(p?.ek);if(Number.isFinite(direct)&&direct>=0)return direct;const key=matchL3Key(p);const ek=key?Number(S.vapePrivatePrices?.[key]):NaN;return Number.isFinite(ek)&&ek>=0?ek:null}
 function matchL3Key(p){const x=((p?.name||'')+' '+(p?.variant||'')).toLowerCase().replace(/\s+/g,' ');for(const [needle,key] of L3_RULES)if(x.includes(needle))return key;return null}
-function vapePrice(p){const ek=privateEk(p);return ek!==null?Math.round(ek*(1+S.vapeMarkup/100)*100)/100:null}
+function vapePrice(p){const ek=privateEk(p);const m=Math.min(25,Math.max(15,Number(S.vapeMarkup)||25));return ek!==null&&ek>=0?Math.round((ek/(1-m/100))*100)/100:null}
 function cartCount(){return S.vapeCart.reduce((n,x)=>n+(+x.qty||0),0)}
 function addToVapeCart(productId,qty=1){const p=S.vapeProducts.find(x=>x.id===productId),price=vapePrice(p);if(!p||price===null)return toast("Kein VK verfügbar – L3-Zuordnung prüfen");const q=Math.max(1,+qty||1),item=S.vapeCart.find(x=>x.productId===productId);if(item){item.qty+=q;item.price=price}else S.vapeCart.push({productId:p.id,name:p.name,variant:p.variant||"",qty:q,price});save();renderVape();toast(`${q} × ${p.name} im Warenkorb`)}
 function updateVapeCart(productId,delta){const item=S.vapeCart.find(x=>x.productId===productId);if(!item)return;item.qty+=delta;if(item.qty<=0)S.vapeCart=S.vapeCart.filter(x=>x.productId!==productId);save();renderVape()}
@@ -750,7 +750,7 @@ function renderVape(){
   }else{
     catalogHtml=`<div class="meta" style="margin:0 0 10px">${allPs.length} Treffer · angezeigt werden maximal 20</div>`+ps.map(p=>{
       const ek=privateEk(p),vk=vapePrice(p);
-      return `<article class="card"><div class="row"><div><h3>${esc(p.name)}</h3><div class="meta">${esc(p.variant||'')} · ${esc(p.category)} · ${esc(p.id)}</div></div><span class="badge">+ ${S.vapeMarkup}% EK</span></div><div class="chips"><span class="chip">RRP —</span>${ek!==null?`<span class="chip">EK L3 🔒 ${money(ek)}</span>`:'<span class="chip">EK L3 🔒 —</span>'}<span class="chip good">${vk===null?'VK —':`VK ${money(vk)}`}</span>${ek!==null?`<span class="chip">intern. Aufschlag ${S.vapeMarkup}%</span>`:'<span class="chip">L3-Zuordnung prüfen</span>'}</div><div class="lead-actions"><button ${vk===null?'disabled':''} data-vape-cart="${p.id}">🛒 In Warenkorb</button><button ${vk===null?'disabled':''} data-vape-add="${p.id}">＋ Einzel-Angebot</button></div></article>`;
+      return `<article class="card"><div class="row"><div><h3>${esc(p.name)}</h3><div class="meta">${esc(p.variant||'')} · ${esc(p.category)} · ${esc(p.id)}</div></div><span class="badge">Marge ${S.vapeMarkup}%</span></div><div class="chips"><span class="chip">RRP —</span>${ek!==null?`<span class="chip">EK L3 🔒 ${money(ek)}</span>`:'<span class="chip">EK L3 🔒 —</span>'}<span class="chip good">${vk===null?'VK —':`VK ${money(vk)}`}</span>${ek!==null?`<span class="chip">interne Marge ${S.vapeMarkup}%</span>`:'<span class="chip">L3-Zuordnung prüfen</span>'}</div><div class="lead-actions"><button ${vk===null?'disabled':''} data-vape-cart="${p.id}">🛒 In Warenkorb</button><button ${vk===null?'disabled':''} data-vape-add="${p.id}">＋ Einzel-Angebot</button></div></article>`;
     }).join('');
   }
   $('#vapeProductList').innerHTML=catalogHtml;
