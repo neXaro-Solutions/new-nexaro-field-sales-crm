@@ -1,4 +1,9 @@
 (() => {
+  // The internal CRM must remain accessible. The dealer login is only activated
+  // explicitly for the protected dealer portal via ?dealer=1.
+  const dealerPortal = new URLSearchParams(location.search).get('dealer') === '1';
+  if (!dealerPortal) return;
+
   const SUPABASE_URL = 'https://hbuqzdmjqvgybwohfnqy.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_zoRbvS06zi6X4_shxXQkMg_O7h0Go6r';
   const CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
