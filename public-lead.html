@@ -15,14 +15,29 @@
 <form id="leadForm">
 <label>Vorname*<input name="first_name" required></label>
 <label>Nachname*<input name="last_name" required></label>
-<label>Firma<input name="company"></label>
+<label>Firma*<input name="company" required></label>
 <label>Position<input name="position"></label>
 <label>E-Mail*<input type="email" name="email" required></label>
 <label>Telefon<input name="phone"></label>
-<label>Branche<input name="industry"></label>
 <label>Ort<input name="city"></label>
-<label>Interesse<textarea name="interest"></textarea></label>
-<label>Ihre Anfrage<textarea name="message"></textarea></label>
+<label>Branche<input name="industry"></label>
+<label>Wofür interessieren Sie sich?*<select name="interest_type" id="interestType" required><option value="">Bitte wählen</option><option value="SumUp">SumUp / Kartenzahlung</option><option value="Vapes">Vape / Trendartikel</option></select></label>
+<section id="sumupFields" hidden>
+<h3>Ihre aktuelle Kartenzahlung</h3>
+<label>Aktueller Kartenzahlungsanbieter<input name="sumup_provider"></label>
+<label>Kartenzahlungsvolumen pro Monat (€)<input name="sumup_volume"></label>
+<label>Transaktionen pro Monat<input name="sumup_transactions"></label>
+<h3>Ihre gewünschte Lösung</h3>
+<label>Was möchten Sie verbessern?<textarea name="sumup_goal"></textarea></label>
+</section>
+<section id="vapeFields" hidden>
+<h3>Ihr Bedarf Trendartikel</h3>
+<label>Aktueller Lieferant<input name="vape_supplier"></label>
+<label>Monatliche Abnahmemenge Vapes ca.<input name="vape_quantity"></label>
+<label>Welche Produkte suchen Sie?<textarea name="vape_products"></textarea></label>
+<label>Was wünschen Sie sich von einem neuen Lieferanten?<textarea name="vape_goal"></textarea></label>
+</section>
+<label>Ihre Nachricht<textarea name="message"></textarea></label>
 <label class="consent"><input type="checkbox" name="consent" required> Datenschutz akzeptiert</label>
 <button type="submit">Anfrage senden</button>
 </form>
