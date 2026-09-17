@@ -1,18 +1,12 @@
 // neXaro public QR lead form
 // Public endpoint: creates leads only. No CRM data access.
-// Supabase URL and publishable key will be injected via secure configuration.
-
+// The publishable/anon key is safe for public use; RLS is the security boundary.
 const SUPABASE_CONFIG = {
-  url: window.NEXARO_SUPABASE_URL || '',
-  key: window.NEXARO_SUPABASE_KEY || ''
+  url: 'https://hbuqzdmjqvgybwohfnqy.supabase.co',
+  key: 'sb_publishable_zoRbvS06zi6X4_shxXQkMg_O7h0Go6r'
 };
 
 async function createLead(payload){
-  if(!SUPABASE_CONFIG.url || !SUPABASE_CONFIG.key){
-    console.warn('Supabase config missing - lead stored as prepared payload', payload);
-    return false;
-  }
-
   const response = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/public_leads`, {
     method: 'POST',
     headers: {
@@ -23,16 +17,16 @@ async function createLead(payload){
     },
     body: JSON.stringify(payload)
   });
-
-  if(!response.ok) throw new Error('Lead konnte nicht gespeichert werden');
+  if(!response.ok){
+    const detail = await response.text().catch(()=> '');
+    throw new Error(`Lead konnte nicht gespeichert werden (${response.status}) ${detail}`);
+  }
   return true;
 }
 
 document.getElementById('leadForm')?.addEventListener('submit', async function(e){
   e.preventDefault();
-
   const data = Object.fromEntries(new FormData(this).entries());
-
   const lead = {
     source:'QR-Code Flyer',
     status:'neu',
@@ -44,17 +38,20 @@ document.getElementById('leadForm')?.addEventListener('submit', async function(e
     phone:data.phone || '',
     industry:data.industry || '',
     city:data.city || '',
+    interest:data.interest ? String(data.interest).split(',').map(x=>x.trim()).filter(Boolean) : [],
     requirement:data.requirement || '',
     message:data.message || '',
-    consent:true
+    consent:data.consent === 'on' || data.consent === 'true' || data.consent === true
   };
 
+  const result = document.getElementById('result');
   try {
+    if(!lead.consent) throw new Error('Einwilligung fehlt');
     await createLead(lead);
-    document.getElementById('result').textContent='Vielen Dank für Ihre Anfrage. Wir melden uns schnellstmöglich.';
+    if(result) result.textContent='Vielen Dank für Ihre Anfrage. Wir melden uns schnellstmöglich.';
     this.reset();
   } catch(error){
-    document.getElementById('result').textContent='Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.';
+    if(result) result.textContent='Die Anfrage konnte gerade nicht gespeichert werden. Bitte versuchen Sie es erneut.';
     console.error(error);
   }
 });
