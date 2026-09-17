@@ -1,6 +1,5 @@
 // neXaro Solutions · Supabase → local CRM lead sync
-// Public QR page: INSERT only. CRM sync: authenticated Supabase access only.
-// Never place a service-role key in browser code.
+// CRM sync requires an authenticated Supabase session. Never use a service-role key in browser code.
 (() => {
   const CONFIG = { url: window.NEXARO_SUPABASE_URL || '', key: window.NEXARO_SUPABASE_KEY || '' };
   const normEmail = v => String(v || '').trim().toLowerCase();
@@ -24,10 +23,16 @@
       if (!silent) console.info('QR-Lead-Sync: Supabase-Konfiguration fehlt.');
       return {ok:false, skipped:true, imported:0, reason:'config-missing'};
     }
+    if (!window.nexaroAuth?.session?.access_token) {
+      return {ok:false, skipped:true, imported:0, reason:'not-authenticated'};
+    }
     if (typeof S === 'undefined') return {ok:false, skipped:true, imported:0, reason:'crm-not-ready'};
 
     const response = await fetch(`${CONFIG.url}/rest/v1/public_leads?select=*&order=created_at.desc&limit=200`, {
-      headers: { apikey: CONFIG.key, Authorization: `Bearer ${CONFIG.key}`, Accept: 'application/json' }
+      headers: {
+        ...window.nexaroAuth.headers,
+        Accept: 'application/json'
+      }
     });
     if (!response.ok) throw new Error(`Supabase Lead-Sync fehlgeschlagen (${response.status})`);
     const remote = await response.json();
@@ -57,6 +62,9 @@
     return {ok:true, skipped:false, imported, total:remote.length};
   }
 
-  window.nexaroLeadSync = {mapPublicLeadToCrmLead, syncPublicLeads};
-  window.addEventListener('load', () => setTimeout(() => syncPublicLeads({silent:true}).catch(console.warn), 300));
+  window.nexaroLeadSync = {
+    mapPublicLeadToCrmLead,
+    syncPublicLeads,
+    sync: syncPublicLeads
+  };
 })();
