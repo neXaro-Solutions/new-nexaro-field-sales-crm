@@ -1,5 +1,5 @@
-const CACHE='nexaro-field-crm-v3-35';
-const ASSETS=['./index.html','./styles.css?v=380','./app.js?v=370','./area-fix.js?v=3','./light-theme.css?v=1','./sumup-pro.css?v=1','./sumup-pro.js?v=1','./sumup-advisor-fix.js?v=5','./sumup-knowledge.js?v=2','./sumup-pricing-policy.js?v=3','./sumup-compare-ocr.js?v=2','./sumup-direct.js?v=1','./manifest.webmanifest','./icon.svg'];
+const CACHE='nexaro-field-crm-v3-36';
+const ASSETS=['./index.html','./styles.css?v=380','./app.js?v=370','./area-fix.js?v=3','./light-theme.css?v=1','./sumup-pro.css?v=1','./sumup-pro.js?v=1','./sumup-advisor-fix.js?v=5','./sumup-knowledge.js?v=2','./sumup-pricing-policy.js?v=3','./sumup-compare-ocr.js?v=2','./sumup-direct.js?v=2','./sumup-crm-offer-link.js?v=4','./manifest.webmanifest','./icon.svg'];
 async function cacheAssets(){const c=await caches.open(CACHE);for(const url of ASSETS){try{const r=await fetch(url,{cache:'reload'});if(r.ok)await c.put(url,r)}catch(e){}}}
 self.addEventListener('install',e=>e.waitUntil(cacheAssets().then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
