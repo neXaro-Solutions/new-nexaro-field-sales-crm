@@ -1,5 +1,14 @@
 (()=>{
 'use strict';
+function toOfferItems(solution){
+ return (solution?.items||[]).map(i=>({
+  description:i.name||'SumUp Lösung',
+  qty:1,
+  unit:'Stück',
+  price:Number(i.price)||0,
+  type:i.type||'product'
+ }));
+}
 window.neXaroSumUpOfferBridge={
  build(recommendation){
   const r=recommendation||window.__nxsuRecommendation||{};
@@ -12,13 +21,18 @@ window.neXaroSumUpOfferBridge={
    });
   }
   return null;
+ },
+ toQuote(solution){
+  return {items:toOfferItems(solution),source:'sumup-advisor'};
  }
 };
 window.addEventListener('nxsu:offer',e=>{
  const solution=window.neXaroSumUpOfferBridge.build(e.detail||window.__nxsuRecommendation);
  window.__nxsuSolution=solution;
  if(solution){
-  window.dispatchEvent(new CustomEvent('nxsu:solution-ready',{detail:{solution,items:solution.items}}));
+  const payload={solution,items:solution.items,quote:window.neXaroSumUpOfferBridge.toQuote(solution)};
+  window.dispatchEvent(new CustomEvent('nxsu:solution-ready',{detail:payload}));
+  window.dispatchEvent(new CustomEvent('nxsu:crm-offer-ready',{detail:payload.quote}));
  }
 });
 })();
