@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 const money=n=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(Number(n)||0);
-const num=v=>Number(String(v??'').replace(/\./g,'').replace(',','.').replace(/[^0-9.-]/g,''))||0;
+const num=v=>{const s=String(v??'').trim().replace(/[^0-9,.-]/g,'');if(!s)return 0;return s.includes(',')?Number(s.replace(/\./g,'').replace(',','.'))||0:Number(s)||0};
 const esc=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 const byId=id=>document.getElementById(id);
 function inject(){
