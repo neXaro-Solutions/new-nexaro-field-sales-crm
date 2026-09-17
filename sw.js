@@ -1,5 +1,6 @@
-const CACHE='nexaro-field-crm-v3-10';
-const ASSETS=['./','./index.html','./styles.css','./app.js?v=390','./area-fix.js?v=1','./manifest.webmanifest','./icon.svg'];
+const CACHE='nexaro-field-crm-v3-11';
+const ASSETS=['./styles.css','./app.js?v=390','./area-fix.js?v=1','./manifest.webmanifest','./icon.svg'];
+const withFix=async r=>{const t=await r.text();return new Response(t.replace('</body>','<script src="area-fix.js?v=1"></script></body>'),{status:r.status,statusText:r.statusText,headers:r.headers})};
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
-self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{const copy=r.clone();caches.open(CACHE).then(x=>x.put(e.request,copy));return r}).catch(()=>caches.match('./index.html'))))});
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;const url=new URL(e.request.url);if(url.pathname.endsWith('/index.html')||e.request.mode==='navigate'){e.respondWith(fetch(e.request).then(async r=>{const fixed=await withFix(r.clone());caches.open(CACHE).then(c=>c.put('./index.html',fixed.clone()));return fixed}).catch(()=>caches.match('./index.html')));return}e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{const copy=r.clone();caches.open(CACHE).then(x=>x.put(e.request,copy));return r}).catch(()=>caches.match('./index.html'))))});
