@@ -24,10 +24,8 @@ function leads(){try{const s=JSON.parse(localStorage.getItem('nexaro-crm-v2-0')|
 function choose(d){
  const tpv=Math.max(0,+d.tpv||0),business=d.business,mobile=d.mobile==='yes',smartphone=d.smartphone==='yes',printer=d.printer==='yes',pos=d.pos==='yes',team=d.team==='yes';
  let hardware,packageType='payment';
- if(pos){
-  hardware=business==='retail'&&d.barcode==='yes'?DATA.pos.find(x=>x.id==='retail'):printer&&team?DATA.pos.find(x=>x.id==='complete'):printer?DATA.pos.find(x=>x.id==='starter'):DATA.pos.find(x=>x.id==='kasse');
-  packageType='pos';
- }else if(mobile&&smartphone&&d.device==='phone')hardware=DATA.hardware.find(x=>x.id==='tap');
+ if(pos){hardware=business==='retail'&&d.barcode==='yes'?DATA.pos.find(x=>x.id==='retail'):printer&&team?DATA.pos.find(x=>x.id==='complete'):printer?DATA.pos.find(x=>x.id==='starter'):DATA.pos.find(x=>x.id==='kasse');packageType='pos'}
+ else if(mobile&&smartphone&&d.device==='phone')hardware=DATA.hardware.find(x=>x.id==='tap');
  else if(mobile&&smartphone&&d.device==='small')hardware=DATA.hardware.find(x=>x.id==='solo-lite');
  else if(printer)hardware=DATA.hardware.find(x=>x.id==='terminal');
  else if(d.device==='independent'||!smartphone)hardware=DATA.hardware.find(x=>x.id==='solo');
@@ -67,18 +65,12 @@ function openCenter(){ensureDialog();const d=document.getElementById('sumupProDi
 function saveLead(){const id=document.getElementById('nxsuLead')?.value;if(!id||!last)return alert('Bitte zuerst einen Lead auswählen.');try{const s=JSON.parse(localStorage.getItem('nexaro-crm-v2-0')||'{}'),l=(s.leads||[]).find(x=>x.id===id);if(!l)return;const d=discount(last);l.product=last.hardware.name;l.terminal=last.hardware.name;l.provider='SumUp';l.need=`Empfohlene SumUp-Lösung: ${last.hardware.name} · ${DATA.fees[last.tariff].name}`;l.notes=[l.notes||'',`SumUp Beratung: ${last.hardware.name}; Hardware ${money(d.net)}; Rabatt ${d.pct} %; TPV ${money(last.tpv)}.`].filter(Boolean).join('\n');localStorage.setItem('nexaro-crm-v2-0',JSON.stringify(s));alert('Empfehlung am Lead gespeichert.')}catch{alert('Lead konnte nicht gespeichert werden.')}}
 function quoteItemHtml(item){return`<div class="line-item"><div class="line-index"></div><input class="li-desc" placeholder="Bezeichnung / Leistung" value="${esc(item.description||'')}"><input class="li-qty" type="number" min="0" step="0.01" value="${item.qty??1}"><input class="li-unit" placeholder="Einheit" value="${esc(item.unit||'Stück')}"><input class="li-price" type="number" min="0" step="0.01" value="${Number(item.price)||0}"><div class="li-total">0,00 €</div><button type="button" class="icon-btn remove-line">✕</button></div>`}
 function bindQuoteRows(box){box.querySelectorAll('.line-item').forEach((r,i)=>{const idx=r.querySelector('.line-index');if(idx)idx.textContent=String(i+1);const rem=r.querySelector('.remove-line');if(rem)rem.onclick=()=>{r.remove();if(typeof window.recalcItems==='function')window.recalcItems('quoteItems','qNetPreview','qVatPreview','qGrossPreview')}})}
-function writeQuoteItems(items,attempt=0){
+function writeQuoteItems(items){
  const box=document.getElementById('quoteItems');
- if(!box){if(attempt<10)setTimeout(()=>writeQuoteItems(items,attempt+1),150);return false}
- box.innerHTML='';
- if(typeof window.addItem==='function'){
-  items.forEach(i=>{try{window.addItem('quoteItems',i)}catch(e){}});
- }
- let rows=[...box.querySelectorAll('.line-item')];
- if(rows.length<items.length)box.innerHTML=items.map(quoteItemHtml).join('');
- rows=[...box.querySelectorAll('.line-item')];
- items.forEach((item,i)=>{const r=rows[i];if(!r)return;const set=(sel,val)=>{const el=r.querySelector(sel);if(el){el.value=val;el.dispatchEvent(new Event('input',{bubbles:true}))}};set('.li-desc',item.description||'');set('.li-qty',item.qty??1);set('.li-unit',item.unit||'Stück');set('.li-price',Number(item.price)||0)});
+ if(!box)return false;
+ box.innerHTML=items.map(quoteItemHtml).join('');
  bindQuoteRows(box);
+ items.forEach((item,i)=>{const r=box.querySelectorAll('.line-item')[i];if(!r)return;[['.li-desc',item.description||''],['.li-qty',item.qty??1],['.li-unit',item.unit||'Stück'],['.li-price',Number(item.price)||0]].forEach(([sel,val])=>{const el=r.querySelector(sel);if(el){el.value=val;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))}});const total=r.querySelector('.li-total');if(total)total.textContent=money((Number(item.qty)||0)*(Number(item.price)||0))});
  if(typeof window.recalcItems==='function')window.recalcItems('quoteItems','qNetPreview','qVatPreview','qGrossPreview');
  return true;
 }
@@ -93,10 +85,15 @@ function offer(){
  last.addons.filter(x=>x.price>0).forEach(x=>items.push({description:x.name,qty:1,unit:'Monat',price:x.price}));
  window.__nxsuOfferItems=items;
  window.quote(null,id);
+ // The core quote() creates its blank row synchronously. Replace it immediately,
+ // then retry only while the dialog/DOM is settling so no blank row can win the race.
+ const apply=()=>writeQuoteItems(items);
+ apply();
+ [50,150,300,600].forEach(ms=>setTimeout(apply,ms));
  const note=`Empfohlene SumUp-Lösung: ${last.hardware.name}\nRegulärer Hardwarepreis: ${money(last.hardware.price)}\nInterner Rabatt: ${d.pct} %\nAngebotspreis Hardware: ${money(d.net)}\nTarif: ${fee.name} · ${fee.label}\nTPV: ${money(last.tpv)} / Monat`;
- const apply=()=>{writeQuoteItems(items);const n=document.getElementById('qNote');if(n){n.value=note;n.dispatchEvent(new Event('input',{bubbles:true}))}};
- [250,500,850,1200].forEach(ms=>setTimeout(apply,ms));
- setTimeout(()=>document.getElementById('sumupProDialog')?.close(),350);
+ const applyNote=()=>{const n=document.getElementById('qNote');if(n){n.value=note;n.dispatchEvent(new Event('input',{bubbles:true}))}};
+ applyNote();[100,300,600].forEach(ms=>setTimeout(applyNote,ms));
+ setTimeout(()=>document.getElementById('sumupProDialog')?.close(),50);
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-action="pricing"]');if(b){e.preventDefault();e.stopImmediatePropagation();openCenter()}},true);
 window.neXaroSumUp={open:openCenter,data:DATA,recommend:choose};
