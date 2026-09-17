@@ -8,6 +8,21 @@ function openAdvisor(lead){
  }
  return false;
 }
+function patchCoreQuote(){
+ if(window.__nxsuCoreQuotePatched||typeof window.quote!=='function')return typeof window.quote==='function';
+ const original=window.quote;
+ window.quote=function(id=null,leadId=null,preset=null){
+  if(!preset&&Array.isArray(window.__nxsuOfferItems)&&window.__nxsuOfferItems.length){
+   preset={
+    items:window.__nxsuOfferItems.map(x=>({description:x.description||x.name||'SumUp Lösung',qty:x.qty??1,unit:x.unit||'Stück',price:Number(x.price)||0})),
+    tariff:{name:'SumUp Beratung',note:'Aus der ausgewählten SumUp-Lösung übernommen.'}
+   };
+  }
+  return original.call(this,id,leadId,preset);
+ };
+ window.__nxsuCoreQuotePatched=true;
+ return true;
+}
 function applyPendingOffer(){
  const items=window.__nxsuOfferItems;
  const box=document.getElementById('quoteItems');
@@ -18,11 +33,13 @@ function applyPendingOffer(){
   const r=rows[i]; if(!r)return;
   const set=(sel,val)=>{
    const el=r.querySelector(sel); if(!el)return;
-   el.value=val;
-   el.setAttribute('value',String(val));
+   const v=String(val??'');
+   el.value=v;
+   el.setAttribute('value',v);
    el.dispatchEvent(new Event('input',{bubbles:true}));
+   el.dispatchEvent(new Event('change',{bubbles:true}));
   };
-  set('.li-desc',item.description||'');
+  set('.li-desc',item.description||item.name||'SumUp Lösung');
   set('.li-qty',item.qty??1);
   set('.li-unit',item.unit||'Stück');
   set('.li-price',Number(item.price)||0);
@@ -35,7 +52,7 @@ function applyPendingOffer(){
 function watchOffer(){
  if(document.documentElement.dataset.nxsuOfferWatch)return;
  document.documentElement.dataset.nxsuOfferWatch='1';
- const run=()=>{if(window.__nxsuOfferItems)applyPendingOffer()};
+ const run=()=>{patchCoreQuote();if(window.__nxsuOfferItems)applyPendingOffer()};
  new MutationObserver(run).observe(document.body,{childList:true,subtree:true});
  setInterval(run,250);
 }
@@ -44,6 +61,7 @@ function start(){
  load('./sumup-solution-builder.js?v=3');
  load('./sumup-offer-bridge.js?v=3');
  load('./sumup-crm-offer-link.js?v=3');
+ patchCoreQuote();
  watchOffer();
 }
 function install(){
@@ -59,6 +77,6 @@ function install(){
  }
 }
 start();
-wait(()=>{install();return !!window.neXaroSumUp?.open},150);
+wait(()=>{install();patchCoreQuote();return !!window.neXaroSumUp?.open},150);
 new MutationObserver(install).observe(document.body,{childList:true,subtree:true});
 })();
