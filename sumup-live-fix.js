@@ -7,7 +7,7 @@ function buildItems(){
  if(!r)return [];
  const items=[];
  if(r.hardware)items.push({...r.hardware,type:'hardware'});
- if(r.software)items.push({...r.software,type:'software'});
+ if(r.software){if(Array.isArray(r.software))r.software.forEach(x=>items.push({...x,type:'software'}));else items.push({...r.software,type:'software'});}
  (r.addons||[]).forEach(x=>items.push({...x,type:'addon'}));
  const fee=window.neXaroSumUp?.data?.fees?.[r.tariff];
  if(fee)items.push({id:r.tariff,name:fee.name,desc:fee.detail||'',price:Number(fee.monthly)||0,type:'tariff'});
@@ -24,7 +24,21 @@ function render(){
  box.innerHTML=old+`<div class="nxsu-recommend nxsu-live-solution"><div class="nxsu-kicker">KOMPLETTES LÖSUNGSPAKET</div><h3>Ausgewählte Lösung</h3><div class="nxsu-grid"><div><b>Positionen</b><ul>${items.map(i=>`<li><b>${esc(i.name)}</b> – ${money(i.price)}${i.type==='tariff'?' / Monat':''}</li>`).join('')}</ul></div><div><b>Gesamtkosten</b><p><strong>${money(one)}</strong> einmalig</p><p><strong>${money(monthly)}</strong> monatlich</p></div></div><div class="nxsu-important">Nur diese empfohlene Lösung wird an das Angebot übergeben.</div></div>`;
  box.dataset.nxsuLiveFix='1';
 }
+function calculateFallback(){
+ if(window.__nxsuRecommendation)return;
+ const btn=document.getElementById('nxsuCalculate');
+ if(btn&&typeof window.neXaroSumUp?.recommend==='function'){
+   try{
+     const d={tpv:document.getElementById('nxsuTpv')?.value,business:document.getElementById('nxsuBusiness')?.value,mobile:document.getElementById('nxsuMobile')?.value,smartphone:document.getElementById('nxsuSmartphone')?.value,device:document.getElementById('nxsuDevice')?.value,pos:document.getElementById('nxsuPos')?.value,printer:document.getElementById('nxsuPrinter')?.value,team:document.getElementById('nxsuTeam')?.value,barcode:document.getElementById('nxsuBarcode')?.value,online:document.getElementById('nxsuOnline')?.value,bookings:document.getElementById('nxsuBookings')?.value,invoice:document.getElementById('nxsuInvoice')?.value,advanced:document.getElementById('nxsuAdvanced')?.value,order:document.getElementById('nxsuOrder')?.value,links:document.getElementById('nxsuLinks')?.value,web:document.getElementById('nxsuOnline')?.value};
+     window.__nxsuRecommendation=window.neXaroSumUp.recommend(d);
+     render();
+     return true;
+   }catch(e){console.error('neXaro SumUp calculate fallback failed',e)}
+ }
+ return false;
+}
 function offer(){
+ if(!window.__nxsuRecommendation)calculateFallback();
  const r=window.__nxsuRecommendation;
  if(!r)return;
  const items=buildItems();
@@ -37,6 +51,8 @@ function offer(){
  if(window.neXaroSumUpCrmOffer?.fill)window.neXaroSumUpCrmOffer.fill(quoteItems,leadId);
 }
 function install(){
+ const calc=document.getElementById('nxsuCalculate');
+ if(calc&&!calc.dataset.nxsuLiveFix){calc.dataset.nxsuLiveFix='1';calc.addEventListener('click',()=>setTimeout(()=>{if(!window.__nxsuRecommendation)calculateFallback();else render()},50),true)}
  const btn=document.getElementById('nxsuOffer');
  if(btn&&!btn.dataset.nxsuLiveFix){btn.dataset.nxsuLiveFix='1';btn.addEventListener('click',()=>setTimeout(offer,50),true)}
  const result=document.getElementById('nxsuResult');
