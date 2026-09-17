@@ -49,10 +49,62 @@ function applyPendingOffer(){
  if(typeof window.recalcItems==='function')window.recalcItems('quoteItems','qNetPreview','qVatPreview','qGrossPreview');
  return true;
 }
+function buildOfferItems(){
+ const result=document.getElementById('nxsuResult');
+ const recommendation=result?.querySelector('.nxsu-recommend');
+ if(!recommendation)return [];
+ const name=recommendation.querySelector('.nxsu-recommend-head h3')?.textContent?.trim()||'SumUp Lösung';
+ const priceText=recommendation.querySelector('.nxsu-price')?.childNodes?.[0]?.textContent?.trim()||'';
+ const price=Number(priceText.replace(/[^0-9,.-]/g,'').replace(/\./g,'').replace(',','.'))||0;
+ const items=[{description:name,qty:1,unit:'Stück',price}];
+ const tpv=Number(document.getElementById('nxsuTpv')?.value)||0;
+ const tariff=tpv>3900?{description:'Zahlungen Plus',qty:1,unit:'Monat',price:19}:{description:'Umsatzbasiertes Zahlen',qty:1,unit:'Monat',price:0};
+ items.push(tariff);
+ const pos=document.getElementById('nxsuPos')?.value==='yes';
+ const advanced=document.getElementById('nxsuAdvanced')?.value==='yes';
+ if(pos&&advanced)items.splice(1,0,{description:'Kassensystem Plus',qty:1,unit:'Monat',price:49});
+ return items;
+}
+function openSelectedOffer(){
+ const leadId=document.getElementById('nxsuLead')?.value||null;
+ let items=Array.isArray(window.__nxsuOfferItems)&&window.__nxsuOfferItems.length?window.__nxsuOfferItems:buildOfferItems();
+ if(!items.length){alert('Bitte zuerst eine Empfehlung berechnen.');return false;}
+ window.__nxsuOfferItems=items;
+ const preset={
+  items:items.map(x=>({description:x.description||x.name||'SumUp Lösung',qty:x.qty??1,unit:x.unit||'Stück',price:Number(x.price)||0})),
+  tariff:{name:items.some(x=>x.description==='Zahlungen Plus')?'Zahlungen Plus':'Umsatzbasiertes Zahlen',note:'Aus der ausgewählten SumUp-Lösung übernommen.'}
+ };
+ if(typeof window.quote!=='function'){
+  alert('Das Angebotsmodul ist noch nicht bereit. Bitte kurz warten und erneut klicken.');
+  return false;
+ }
+ try{
+  window.quote(null,leadId,preset);
+  setTimeout(applyPendingOffer,80);
+  setTimeout(applyPendingOffer,250);
+  setTimeout(applyPendingOffer,600);
+  return true;
+ }catch(err){
+  console.error('neXaro SumUp Angebot:',err);
+  alert('Das Angebot konnte nicht geöffnet werden. Bitte die Seite einmal neu laden.');
+  return false;
+ }
+}
+function bindOfferButton(){
+ const b=document.getElementById('nxsuOffer');
+ if(!b||b.dataset.nxsuOfferBound)return !!b;
+ b.dataset.nxsuOfferBound='1';
+ b.addEventListener('click',e=>{
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  openSelectedOffer();
+ },true);
+ return true;
+}
 function watchOffer(){
  if(document.documentElement.dataset.nxsuOfferWatch)return;
  document.documentElement.dataset.nxsuOfferWatch='1';
- const run=()=>{patchCoreQuote();if(window.__nxsuOfferItems)applyPendingOffer()};
+ const run=()=>{patchCoreQuote();bindOfferButton();if(window.__nxsuOfferItems)applyPendingOffer()};
  new MutationObserver(run).observe(document.body,{childList:true,subtree:true});
  setInterval(run,250);
 }
@@ -60,7 +112,7 @@ function start(){
  load('./sumup-advisor-clean-v2.js?v=2');
  load('./sumup-solution-builder.js?v=3');
  load('./sumup-offer-bridge.js?v=3');
- load('./sumup-crm-offer-link.js?v=3');
+ load('./sumup-crm-offer-link.js?v=4');
  patchCoreQuote();
  watchOffer();
 }
@@ -77,6 +129,6 @@ function install(){
  }
 }
 start();
-wait(()=>{install();patchCoreQuote();return !!window.neXaroSumUp?.open},150);
+wait(()=>{install();patchCoreQuote();bindOfferButton();return !!window.neXaroSumUp?.open},150);
 new MutationObserver(install).observe(document.body,{childList:true,subtree:true});
 })();
