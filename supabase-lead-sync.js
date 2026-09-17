@@ -7,32 +7,41 @@
 
   function mapPublicLeadToCrmLead(p) {
     return {
-      id: `qr-${p.id}`, publicLeadId: p.id, company: p.company || '',
+      id: `qr-${p.id}`,
+      publicLeadId: p.id,
+      company: p.company || '',
       contact: [p.first_name, p.last_name].filter(Boolean).join(' '),
-      phone: p.phone || '', email: p.email || '', industry: p.industry || '',
-      city: p.city || '', address: p.city || '', source: p.source || 'QR-Code Flyer',
-      status: p.status || 'neu', priority: 'Hoch',
-      interest: Array.isArray(p.interest) ? p.interest : [], need: p.requirement || '',
-      notes: p.message || '', createdAt: p.created_at || new Date().toISOString(),
+      phone: p.phone || '',
+      email: p.email || '',
+      industry: p.industry || '',
+      city: p.city || '',
+      address: p.city || '',
+      source: p.source || 'QR-Code Flyer',
+      status: p.status || 'neu',
+      priority: 'Hoch',
+      interest: Array.isArray(p.interest) ? p.interest : [],
+      need: p.requirement || '',
+      notes: p.message || '',
+      sumup_provider: p.sumup_provider || '',
+      sumup_volume: p.sumup_volume || '',
+      sumup_transactions: p.sumup_transactions || '',
+      sumup_goal: p.sumup_goal || '',
+      vape_supplier: p.vape_supplier || '',
+      vape_quantity: p.vape_quantity || '',
+      vape_products: p.vape_products || '',
+      vape_goal: p.vape_goal || '',
+      createdAt: p.created_at || new Date().toISOString(),
       updatedAt: p.created_at || new Date().toISOString()
     };
   }
 
   async function syncPublicLeads({silent = false} = {}) {
-    if (!CONFIG.url || !CONFIG.key) {
-      if (!silent) console.info('QR-Lead-Sync: Supabase-Konfiguration fehlt.');
-      return {ok:false, skipped:true, imported:0, reason:'config-missing'};
-    }
-    if (!window.nexaroAuth?.session?.access_token) {
-      return {ok:false, skipped:true, imported:0, reason:'not-authenticated'};
-    }
+    if (!CONFIG.url || !CONFIG.key) return {ok:false, skipped:true, imported:0, reason:'config-missing'};
+    if (!window.nexaroAuth?.session?.access_token) return {ok:false, skipped:true, imported:0, reason:'not-authenticated'};
     if (typeof S === 'undefined') return {ok:false, skipped:true, imported:0, reason:'crm-not-ready'};
 
     const response = await fetch(`${CONFIG.url}/rest/v1/public_leads?select=*&order=created_at.desc&limit=200`, {
-      headers: {
-        ...window.nexaroAuth.headers,
-        Accept: 'application/json'
-      }
+      headers: {...window.nexaroAuth.headers, Accept:'application/json'}
     });
     if (!response.ok) throw new Error(`Supabase Lead-Sync fehlgeschlagen (${response.status})`);
     const remote = await response.json();
@@ -40,14 +49,9 @@
 
     for (const p of remote) {
       const mapped = mapPublicLeadToCrmLead(p);
-      const existing = S.leads.find(l =>
-        l.publicLeadId === p.id ||
-        (normEmail(l.email) && normEmail(l.email) === normEmail(mapped.email) && normCompany(l.company) === normCompany(mapped.company))
-      );
+      const existing = S.leads.find(l => l.publicLeadId === p.id || (normEmail(l.email) && normEmail(l.email) === normEmail(mapped.email) && normCompany(l.company) === normCompany(mapped.company)));
       if (existing) {
-        existing.publicLeadId = p.id;
-        existing.source = existing.source || mapped.source;
-        existing.createdAt = existing.createdAt || mapped.createdAt;
+        Object.assign(existing, mapped);
         continue;
       }
       S.leads.unshift(mapped);
@@ -62,9 +66,5 @@
     return {ok:true, skipped:false, imported, total:remote.length};
   }
 
-  window.nexaroLeadSync = {
-    mapPublicLeadToCrmLead,
-    syncPublicLeads,
-    sync: syncPublicLeads
-  };
+  window.nexaroLeadSync = {mapPublicLeadToCrmLead, syncPublicLeads, sync:syncPublicLeads};
 })();
