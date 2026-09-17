@@ -22,13 +22,14 @@ function addButton(parent,label,lead){
 }
 function install(){
   const pricing=[...document.querySelectorAll('[data-action="pricing"]')];
-  pricing.forEach(b=>{b.removeAttribute('data-action');if(!b.dataset.nxsuDirectBound){b.dataset.nxsuDirectBound='1';b.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openAdvisor(null)|| (load('./sumup-advisor-fix.js?v=5'),setTimeout(()=>openAdvisor(null),500))},true)}});
+  pricing.forEach(b=>{b.removeAttribute('data-action');if(!b.dataset.nxsuDirectBound){b.dataset.nxsuDirectBound='1';b.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openAdvisor(null)||(load('./sumup-advisor-fix.js?v=5'),setTimeout(()=>openAdvisor(null),500))},true)}});
   const dash=document.querySelector('#dashboard');
   if(dash&&!document.getElementById('nxsuDashboardDirect')){
     const q=dash.querySelector('.quick-actions');
     if(q){const b=document.createElement('button');b.id='nxsuDashboardDirect';b.className='quick-action';b.type='button';b.innerHTML='<span>💶</span><b>SumUp Beratung</b><small>Bedarf → Lösung → Angebot</small>';b.onclick=()=>openAdvisor(null)||(load('./sumup-advisor-fix.js?v=5'),setTimeout(()=>openAdvisor(null),500));q.appendChild(b)}
   }
   document.querySelectorAll('.lead-card').forEach(card=>{const lead=leadFromCard(card);const actions=card.querySelector('.lead-actions')||card.querySelector('.actions')||card.lastElementChild;addButton(actions,'🧠 Beratung',lead)});
+  if(window.neXaroSumUp?.open)load('./sumup-compare-ocr.js?v=2');
 }
 load('./sumup-advisor-fix.js?v=5');
 wait(()=>{install();return !!window.neXaroSumUp?.open},150);
