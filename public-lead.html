@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>neXaro Neukundenanfrage</title>
+<link rel="stylesheet" href="public-lead.css">
+</head>
+<body>
+<main class="lead-page">
+<header>
+<h1>neXaro Solutions</h1>
+<p>Partnerschaft & Zusammenarbeit</p>
+</header>
+<form id="leadForm">
+<label>Vorname*<input name="first_name" required></label>
+<label>Nachname*<input name="last_name" required></label>
+<label>Firma<input name="company"></label>
+<label>Position<input name="position"></label>
+<label>E-Mail*<input type="email" name="email" required></label>
+<label>Telefon<input name="phone"></label>
+<label>Branche<input name="industry"></label>
+<label>Ort<input name="city"></label>
+<label>Interesse<textarea name="interest"></textarea></label>
+<label>Ihre Anfrage<textarea name="message"></textarea></label>
+<label class="consent"><input type="checkbox" name="consent" required> Datenschutz akzeptiert</label>
+<button type="submit">Anfrage senden</button>
+</form>
+<p id="result"></p>
+</main>
+<script src="public-lead.js"></script>
+</body>
+</html>
