@@ -1,1 +1,101 @@
-body{margin:0;background:#08111f;color:#fff;font-family:Arial,sans-serif}.lead-page{max-width:520px;margin:auto;padding:24px}.lead-page header{text-align:center;margin-bottom:24px}form{display:grid;gap:14px;background:#101c2e;padding:20px;border-radius:16px}label{display:grid;gap:6px}input,textarea,button{padding:12px;border-radius:8px;border:0;font-size:16px}textarea{min-height:90px}.consent{display:flex;grid-template-columns:auto auto}.consent input{width:auto}button{background:#fff;color:#08111f;font-weight:bold;cursor:pointer}#result{text-align:center;margin-top:20px}
+body{
+  margin:0;
+  background:#07090b;
+  color:#fff;
+  font-family:Arial,sans-serif;
+  background-image:linear-gradient(135deg,rgba(0,0,0,.92),rgba(15,15,15,.88));
+}
+
+body:before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:radial-gradient(circle at top right,rgba(255,106,0,.18),transparent 35%);
+  pointer-events:none;
+}
+
+.lead-page{
+  max-width:620px;
+  margin:auto;
+  padding:32px 20px;
+}
+
+.lead-page header{
+  text-align:center;
+  margin-bottom:28px;
+}
+
+.lead-page header h1{
+  color:#fff;
+  font-size:34px;
+  text-transform:uppercase;
+}
+
+.lead-page header h1 span{
+  color:#ff6a00;
+}
+
+form{
+  display:grid;
+  gap:16px;
+  background:rgba(12,14,16,.92);
+  padding:28px;
+  border-radius:18px;
+  border:1px solid rgba(255,106,0,.35);
+  box-shadow:0 20px 50px rgba(0,0,0,.55);
+}
+
+label{
+  display:grid;
+  gap:7px;
+  color:#fff;
+  font-weight:600;
+}
+
+input,textarea{
+  padding:14px;
+  border-radius:8px;
+  border:1px solid #444;
+  background:#f4f4f4;
+  color:#111;
+  font-size:16px;
+}
+
+input:focus,textarea:focus{
+  outline:none;
+  border-color:#ff6a00;
+  box-shadow:0 0 0 2px rgba(255,106,0,.25);
+}
+
+textarea{min-height:110px}
+
+.consent{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  font-weight:400;
+}
+
+.consent input{width:auto;margin-top:4px}
+
+button{
+  padding:15px;
+  border-radius:10px;
+  border:0;
+  background:#ff6a00;
+  color:#fff;
+  font-size:18px;
+  font-weight:bold;
+  cursor:pointer;
+  text-transform:uppercase;
+}
+
+button:hover{
+  background:#ff7d24;
+}
+
+#result{
+  text-align:center;
+  margin-top:20px;
+  color:#ff6a00;
+}
