@@ -25,5 +25,5 @@ function setup(){const screen=$('#area'),search=$('#areaQuery')?.closest('.card'
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();
 function loadCss(href){if(document.querySelector(`link[data-nx="${href}"]`))return;const l=document.createElement('link');l.rel='stylesheet';l.href=href;l.dataset.nx=href;document.head.appendChild(l)}
 function loadJs(src){if(document.querySelector(`script[data-nx="${src}"]`))return;const s=document.createElement('script');s.src=src;s.dataset.nx=src;document.head.appendChild(s)}
-loadCss('./light-theme.css?v=1');loadCss('./sumup-pro.css?v=1');loadJs('./sumup-pro.js?v=1');loadJs('./sumup-knowledge.js?v=1');loadJs('./sumup-pricing-policy.js?v=2');
+loadCss('./light-theme.css?v=1');loadCss('./sumup-pro.css?v=1');loadJs('./sumup-pro.js?v=1');loadJs('./sumup-knowledge.js?v=1');loadJs('./sumup-pricing-policy.js?v=3');
 })();
