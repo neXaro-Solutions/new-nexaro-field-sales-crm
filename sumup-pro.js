@@ -13,8 +13,8 @@ const DATA={
  pos:[
   {id:'kasse',name:'SumUp Kasse',price:399,desc:'All-in-one-Kassensystem für zentrale Kassenprozesse.',discountable:true},
   {id:'starter',name:'Kassensystem Starter-Kit',price:549,desc:'SumUp Kasse mit Bondrucker.',discountable:false},
-  {id:'complete',name:'Komplettes Kassensystem-Set',price:599,desc:'Kasse mit Bondrucker und Kassenschublade.',discountable:false},
-  {id:'retail',name:'Kassensystem-Set für Einzelhandel',price:649,desc:'Kasse mit Bondrucker, Kassenschublade und Barcode-Scanner.',discountable:false}
+  {id:'complete',name:'Komplettes Kassensystem-Set',price:599,desc:'SumUp Kasse mit Bondrucker und Kassenschublade.',discountable:false},
+  {id:'retail',name:'Kassensystem-Set für Einzelhandel',price:649,desc:'SumUp Kasse mit Bondrucker, Kassenschublade und Barcode-Scanner.',discountable:false}
  ],
  software:{free:{name:'Kostenlose Kassensoftware',price:0},plus:{name:'Kassensystem Plus',price:49}},
  business:[['gastronomie','Gastronomie'],['retail','Einzelhandel'],['beauty','Beauty'],['service','Professionelle Dienstleistungen'],['craft','Handwerk'],['taxi','Taxi / Mobilität'],['events','Veranstaltungen'],['medical','Medizinische Versorgung'],['hotel','Hotel / Beherbergung'],['association','Verein / Organisation']]
@@ -27,10 +27,10 @@ function choose(d){
  if(pos){
   hardware=business==='retail'&&d.barcode==='yes'?DATA.pos.find(x=>x.id==='retail'):printer&&team?DATA.pos.find(x=>x.id==='complete'):printer?DATA.pos.find(x=>x.id==='starter'):DATA.pos.find(x=>x.id==='kasse');
   packageType='pos';
- }else if(mobile&&smartphone&&d.device==='phone') hardware=DATA.hardware.find(x=>x.id==='tap');
- else if(mobile&&smartphone&&d.device==='small') hardware=DATA.hardware.find(x=>x.id==='solo-lite');
- else if(printer) hardware=DATA.hardware.find(x=>x.id==='terminal');
- else if(d.device==='independent'||!smartphone) hardware=DATA.hardware.find(x=>x.id==='solo');
+ }else if(mobile&&smartphone&&d.device==='phone')hardware=DATA.hardware.find(x=>x.id==='tap');
+ else if(mobile&&smartphone&&d.device==='small')hardware=DATA.hardware.find(x=>x.id==='solo-lite');
+ else if(printer)hardware=DATA.hardware.find(x=>x.id==='terminal');
+ else if(d.device==='independent'||!smartphone)hardware=DATA.hardware.find(x=>x.id==='solo');
  else hardware=DATA.hardware.find(x=>x.id==='solo-lite');
  const tariff=tpv>3900?'plus':'payg';
  const software=packageType==='pos'?(d.advanced==='yes'?DATA.software.plus:DATA.software.free):null;
@@ -39,8 +39,7 @@ function choose(d){
  if(d.links==='yes')addons.push({name:'Zahlungslinks',price:0,desc:'Zahlungslinks'});
  if(d.bookings==='yes')addons.push({name:'SumUp Bookings',price:0,desc:'Online-Terminbuchung'});
  if(d.invoice==='yes')addons.push({name:'Rechnungen',price:0,desc:'Rechnungsfunktion'});
- const reasons=[];
- reasons.push(tpv>3900?'TPV über 3.900 € → Zahlungen Plus wird vorgeschlagen.':'TPV bis 3.900 € → umsatzbasiertes Modell ohne Monatsgebühr.');
+ const reasons=[tpv>3900?'TPV über 3.900 € → Zahlungen Plus wird vorgeschlagen.':'TPV bis 3.900 € → umsatzbasiertes Modell ohne Monatsgebühr.'];
  if(pos)reasons.push('Kassensystem wird benötigt.');
  if(business==='retail'&&d.barcode==='yes')reasons.push('Einzelhandel + Barcode-Scanner → Retail-Komplettset.');
  if(printer)reasons.push('Belegdrucker wird benötigt.');
@@ -48,16 +47,10 @@ function choose(d){
  if(mobile)reasons.push('Mobiler Einsatz berücksichtigt.');
  return {hardware,tariff,software,addons,packageType,reasons,tpv,business};
 }
-function formData(){
- const g=id=>document.getElementById(id)?.value||'';
- return {tpv:+g('nxsuTpv')||0,business:g('nxsuBusiness'),mobile:g('nxsuMobile'),smartphone:g('nxsuSmartphone'),device:g('nxsuDevice'),pos:g('nxsuPos'),printer:g('nxsuPrinter'),team:g('nxsuTeam'),barcode:g('nxsuBarcode'),online:g('nxsuOnline'),bookings:g('nxsuBookings'),invoice:g('nxsuInvoice'),advanced:g('nxsuAdvanced'),links:g('nxsuLinks')};
-}
-function discount(r){const requested=Math.min(25,Math.max(0,+document.getElementById('nxsuDiscount')?.value||0));const h=r.hardware;const allowed=h.discountable!==false&&h.price>0;const pct=allowed?requested:0;return {pct,net:h.price-(h.price*pct/100)};}
-function renderResult(r){
- const h=r.hardware,t=DATA.fees[r.tariff],d=discount(r),monthly=r.tpv*t.rate+t.monthly;
- return `<div class="nxsu-recommend"><div class="nxsu-recommend-head"><div><span class="nxsu-kicker">IHRE EMPFOHLENE LÖSUNG</span><h3>${esc(h.name)}</h3><p>${esc(h.desc)}</p></div><div class="nxsu-price">${money(d.net)}<small>regulär ${money(h.price)}${d.pct?' · interner Rabatt '+d.pct+' %':''}</small></div></div><div class="nxsu-pillrow"><span>Tarif: <b>${esc(t.name)}</b></span><span>${t.label}</span><span>${money(t.monthly)}/Monat</span><span>TPV ${money(r.tpv)} · rechnerisch ${money(monthly)}/Monat</span></div><div class="nxsu-grid"><div><b>Warum diese Lösung?</b><ul>${r.reasons.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div><div><b>Bestandteile</b><ul><li>${esc(h.name)} – ${money(d.net)} einmalig</li>${r.software?`<li>${esc(r.software.name)} – ${money(r.software.price)}/Monat</li>`:''}<li>${esc(t.name)} – ${esc(t.detail)}</li>${r.addons.map(x=>`<li>${esc(x.name)} – ${esc(x.desc)}</li>`).join('')}</ul></div></div><div class="nxsu-important"><b>Preisregel:</b> Regulärer Hardwarepreis als Basis. Interner Rabatt maximal 25 % und nur auf rabattfähige Hardware. Kassenschublade, Epson-Drucker und Handscanner sind ausgeschlossen.</div><div class="nxsu-actions"><button type="button" class="primary" id="nxsuOffer">💼 Ausgewählte Lösung ins Angebot</button><button type="button" class="secondary" id="nxsuSaveLead">💾 Empfehlung am Lead speichern</button></div></div>`;
-}
-function update(){last=choose(formData());const box=document.getElementById('nxsuResult');if(!box)return;box.innerHTML=renderResult(last);document.getElementById('nxsuOffer').onclick=offer;document.getElementById('nxsuSaveLead').onclick=saveLead;}
+function formData(){const g=id=>document.getElementById(id)?.value||'';return{tpv:+g('nxsuTpv')||0,business:g('nxsuBusiness'),mobile:g('nxsuMobile'),smartphone:g('nxsuSmartphone'),device:g('nxsuDevice'),pos:g('nxsuPos'),printer:g('nxsuPrinter'),team:g('nxsuTeam'),barcode:g('nxsuBarcode'),online:g('nxsuOnline'),bookings:g('nxsuBookings'),invoice:g('nxsuInvoice'),advanced:g('nxsuAdvanced'),links:g('nxsuLinks')}}
+function discount(r){const requested=Math.min(25,Math.max(0,+document.getElementById('nxsuDiscount')?.value||0)),h=r.hardware,allowed=h.discountable!==false&&h.price>0,pct=allowed?requested:0;return{pct,net:h.price-(h.price*pct/100)}}
+function renderResult(r){const h=r.hardware,t=DATA.fees[r.tariff],d=discount(r),monthly=r.tpv*t.rate+t.monthly;return`<div class="nxsu-recommend"><div class="nxsu-recommend-head"><div><span class="nxsu-kicker">IHRE EMPFOHLENE LÖSUNG</span><h3>${esc(h.name)}</h3><p>${esc(h.desc)}</p></div><div class="nxsu-price">${money(d.net)}<small>regulär ${money(h.price)}${d.pct?' · interner Rabatt '+d.pct+' %':''}</small></div></div><div class="nxsu-pillrow"><span>Tarif: <b>${esc(t.name)}</b></span><span>${t.label}</span><span>${money(t.monthly)}/Monat</span><span>TPV ${money(r.tpv)} · rechnerisch ${money(monthly)}/Monat</span></div><div class="nxsu-grid"><div><b>Warum diese Lösung?</b><ul>${r.reasons.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div><div><b>Bestandteile</b><ul><li>${esc(h.name)} – ${money(d.net)} einmalig</li>${r.software?`<li>${esc(r.software.name)} – ${money(r.software.price)}/Monat</li>`:''}<li>${esc(t.name)} – ${esc(t.detail)}</li>${r.addons.map(x=>`<li>${esc(x.name)} – ${esc(x.desc)}</li>`).join('')}</ul></div></div><div class="nxsu-important"><b>Preisregel:</b> Regulärer Hardwarepreis als Basis. Interner Rabatt maximal 25 % und nur auf rabattfähige Hardware. Kassenschublade, Epson-Drucker und Handscanner sind ausgeschlossen.</div><div class="nxsu-actions"><button type="button" class="primary" id="nxsuOffer">💼 Ausgewählte Lösung ins Angebot</button><button type="button" class="secondary" id="nxsuSaveLead">💾 Empfehlung am Lead speichern</button></div></div>`}
+function update(){last=choose(formData());const box=document.getElementById('nxsuResult');if(!box)return;box.innerHTML=renderResult(last);document.getElementById('nxsuOffer').onclick=offer;document.getElementById('nxsuSaveLead').onclick=saveLead}
 function ensureDialog(){
  if(document.getElementById('sumupProDialog'))return;
  const d=document.createElement('dialog');d.id='sumupProDialog';
@@ -65,16 +58,46 @@ function ensureDialog(){
  document.body.appendChild(d);
  document.getElementById('nxsuClose').onclick=()=>d.close();
  document.getElementById('nxsuSource').onclick=()=>window.open('https://www.sumup.com/de-de/','_blank','noopener');
- const lead=document.getElementById('nxsuLead');
- leads().forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=(l.company||'Lead')+(l.city?' · '+l.city:'');lead.appendChild(o)});
- const ids=['nxsuLead','nxsuBusiness','nxsuTpv','nxsuDiscount','nxsuMobile','nxsuSmartphone','nxsuDevice','nxsuPos','nxsuPrinter','nxsuTeam','nxsuBarcode','nxsuOnline','nxsuBookings','nxsuInvoice','nxsuAdvanced','nxsuLinks'];
- ids.forEach(id=>document.getElementById(id).addEventListener('input',update));
- lead.addEventListener('change',()=>{const l=leads().find(x=>x.id===lead.value);if(l){document.getElementById('nxsuTpv').value=l.tpv||0;document.getElementById('nxsuBusiness').value=mapBusiness(l.industry||'');update()}});
+ const lead=document.getElementById('nxsuLead');leads().forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=(l.company||'Lead')+(l.city?' · '+l.city:'');lead.appendChild(o)});
+ ['nxsuLead','nxsuBusiness','nxsuTpv','nxsuDiscount','nxsuMobile','nxsuSmartphone','nxsuDevice','nxsuPos','nxsuPrinter','nxsuTeam','nxsuBarcode','nxsuOnline','nxsuBookings','nxsuInvoice','nxsuAdvanced','nxsuLinks'].forEach(id=>document.getElementById(id).addEventListener('input',update));
+ lead.addEventListener('change',()=>{const l=leads().find(x=>x.id===lead.value);if(l){document.getElementById('nxsuTpv').value=l.tpv||0;document.getElementById('nxsuBusiness').value=mapBusiness(l.industry||'');update()}})
 }
 function mapBusiness(s){s=String(s||'').toLowerCase();if(/retail|handel|shop|bekleidung|mode|geschäft|geschaeft/.test(s))return'retail';if(/cafe|restaurant|gastr|bar|imbiss|food|markt/.test(s))return'gastronomie';if(/friseur|barber|kosmetik|beauty|nagel|wellness/.test(s))return'beauty';if(/handwerk|bau|montage|reparatur/.test(s))return'craft';if(/taxi/.test(s))return'taxi';if(/hotel/.test(s))return'hotel';if(/medizin|arzt|praxis/.test(s))return'medical';if(/event|veranst/.test(s))return'events';return'service'}
-function openCenter(){ensureDialog();const d=document.getElementById('sumupProDialog');if(d.open)d.close();update();d.showModal();}
-function saveLead(){const id=document.getElementById('nxsuLead')?.value;if(!id||!last)return alert('Bitte zuerst einen Lead auswählen.');try{const s=JSON.parse(localStorage.getItem('nexaro-crm-v2-0')||'{}');const l=(s.leads||[]).find(x=>x.id===id);if(!l)return;const d=discount(last);l.product=last.hardware.name;l.terminal=last.hardware.name;l.provider='SumUp';l.need=`Empfohlene SumUp-Lösung: ${last.hardware.name} · ${DATA.fees[last.tariff].name}`;l.notes=[l.notes||'',`SumUp Beratung: ${last.hardware.name}; Hardware ${money(d.net)}; Rabatt ${d.pct} %; TPV ${money(last.tpv)}.`].filter(Boolean).join('\n');localStorage.setItem('nexaro-crm-v2-0',JSON.stringify(s));alert('Empfehlung am Lead gespeichert.')}catch{alert('Lead konnte nicht gespeichert werden.')}}
-function offer(){if(!last)return;const id=document.getElementById('nxsuLead')?.value||null;const l=leads().find(x=>x.id===id);if(typeof window.quote!=='function')return alert('Angebotsmodul nicht verfügbar.');const d=discount(last);window.quote(null,id);setTimeout(()=>{const box=document.getElementById('quoteItems');if(box&&typeof window.addItem==='function'){box.innerHTML='';window.addItem('quoteItems',{description:last.hardware.name,qty:1,unit:'Stück',price:d.net});if(last.software?.price)window.addItem('quoteItems',{description:last.software.name,qty:1,unit:'Monat',price:last.software.price});const fee=DATA.fees[last.tariff];if(fee.monthly)window.addItem('quoteItems',{description:fee.name,qty:1,unit:'Monat',price:fee.monthly});last.addons.filter(x=>x.price>0).forEach(x=>window.addItem('quoteItems',{description:x.name,qty:1,unit:'Monat',price:x.price}));}const note=document.getElementById('qNote');if(note)note.value=`Empfohlene SumUp-Lösung: ${last.hardware.name}\nRegulärer Hardwarepreis: ${money(last.hardware.price)}\nInterner Rabatt: ${d.pct} %\nAngebotspreis Hardware: ${money(d.net)}\nTarif: ${DATA.fees[last.tariff].name} · ${DATA.fees[last.tariff].label}\nTPV: ${money(last.tpv)} / Monat`;document.getElementById('sumupProDialog')?.close();},300)}
-document.addEventListener('click',e=>{const b=e.target.closest('[data-action="pricing"]');if(b){e.preventDefault();e.stopImmediatePropagation();openCenter();}},true);
+function openCenter(){ensureDialog();const d=document.getElementById('sumupProDialog');if(d.open)d.close();update();d.showModal()}
+function saveLead(){const id=document.getElementById('nxsuLead')?.value;if(!id||!last)return alert('Bitte zuerst einen Lead auswählen.');try{const s=JSON.parse(localStorage.getItem('nexaro-crm-v2-0')||'{}'),l=(s.leads||[]).find(x=>x.id===id);if(!l)return;const d=discount(last);l.product=last.hardware.name;l.terminal=last.hardware.name;l.provider='SumUp';l.need=`Empfohlene SumUp-Lösung: ${last.hardware.name} · ${DATA.fees[last.tariff].name}`;l.notes=[l.notes||'',`SumUp Beratung: ${last.hardware.name}; Hardware ${money(d.net)}; Rabatt ${d.pct} %; TPV ${money(last.tpv)}.`].filter(Boolean).join('\n');localStorage.setItem('nexaro-crm-v2-0',JSON.stringify(s));alert('Empfehlung am Lead gespeichert.')}catch{alert('Lead konnte nicht gespeichert werden.')}}
+function quoteItemHtml(item){return`<div class="line-item"><div class="line-index"></div><input class="li-desc" placeholder="Bezeichnung / Leistung" value="${esc(item.description||'')}"><input class="li-qty" type="number" min="0" step="0.01" value="${item.qty??1}"><input class="li-unit" placeholder="Einheit" value="${esc(item.unit||'Stück')}"><input class="li-price" type="number" min="0" step="0.01" value="${Number(item.price)||0}"><div class="li-total">0,00 €</div><button type="button" class="icon-btn remove-line">✕</button></div>`}
+function bindQuoteRows(box){box.querySelectorAll('.line-item').forEach((r,i)=>{const idx=r.querySelector('.line-index');if(idx)idx.textContent=String(i+1);const rem=r.querySelector('.remove-line');if(rem)rem.onclick=()=>{r.remove();if(typeof window.recalcItems==='function')window.recalcItems('quoteItems','qNetPreview','qVatPreview','qGrossPreview')}})}
+function writeQuoteItems(items,attempt=0){
+ const box=document.getElementById('quoteItems');
+ if(!box){if(attempt<10)setTimeout(()=>writeQuoteItems(items,attempt+1),150);return false}
+ box.innerHTML='';
+ if(typeof window.addItem==='function'){
+  items.forEach(i=>{try{window.addItem('quoteItems',i)}catch(e){}});
+ }
+ let rows=[...box.querySelectorAll('.line-item')];
+ if(rows.length<items.length)box.innerHTML=items.map(quoteItemHtml).join('');
+ rows=[...box.querySelectorAll('.line-item')];
+ items.forEach((item,i)=>{const r=rows[i];if(!r)return;const set=(sel,val)=>{const el=r.querySelector(sel);if(el){el.value=val;el.dispatchEvent(new Event('input',{bubbles:true}))}};set('.li-desc',item.description||'');set('.li-qty',item.qty??1);set('.li-unit',item.unit||'Stück');set('.li-price',Number(item.price)||0)});
+ bindQuoteRows(box);
+ if(typeof window.recalcItems==='function')window.recalcItems('quoteItems','qNetPreview','qVatPreview','qGrossPreview');
+ return true;
+}
+function offer(){
+ if(!last)return;
+ const id=document.getElementById('nxsuLead')?.value||null;
+ if(typeof window.quote!=='function')return alert('Angebotsmodul nicht verfügbar.');
+ const d=discount(last),fee=DATA.fees[last.tariff];
+ const items=[{description:last.hardware.name,qty:1,unit:'Stück',price:d.net}];
+ if(last.software?.price)items.push({description:last.software.name,qty:1,unit:'Monat',price:last.software.price});
+ if(fee.monthly)items.push({description:fee.name,qty:1,unit:'Monat',price:fee.monthly});
+ last.addons.filter(x=>x.price>0).forEach(x=>items.push({description:x.name,qty:1,unit:'Monat',price:x.price}));
+ window.__nxsuOfferItems=items;
+ window.quote(null,id);
+ const note=`Empfohlene SumUp-Lösung: ${last.hardware.name}\nRegulärer Hardwarepreis: ${money(last.hardware.price)}\nInterner Rabatt: ${d.pct} %\nAngebotspreis Hardware: ${money(d.net)}\nTarif: ${fee.name} · ${fee.label}\nTPV: ${money(last.tpv)} / Monat`;
+ const apply=()=>{writeQuoteItems(items);const n=document.getElementById('qNote');if(n){n.value=note;n.dispatchEvent(new Event('input',{bubbles:true}))}};
+ [250,500,850,1200].forEach(ms=>setTimeout(apply,ms));
+ setTimeout(()=>document.getElementById('sumupProDialog')?.close(),350);
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-action="pricing"]');if(b){e.preventDefault();e.stopImmediatePropagation();openCenter()}},true);
 window.neXaroSumUp={open:openCenter,data:DATA,recommend:choose};
 })();
