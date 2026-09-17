@@ -9,9 +9,10 @@ function openAdvisor(lead){
  return false;
 }
 function start(){
- load('./sumup-solution-builder.js?v=2');
- load('./sumup-live-fix.js?v=6');
- load('./sumup-crm-offer-link.js?v=2');
+ load('./sumup-advisor-clean-v2.js?v=1');
+ load('./sumup-solution-builder.js?v=3');
+ load('./sumup-offer-bridge.js?v=3');
+ load('./sumup-crm-offer-link.js?v=3');
 }
 function install(){
  document.querySelectorAll('[data-action="pricing"]').forEach(b=>{
