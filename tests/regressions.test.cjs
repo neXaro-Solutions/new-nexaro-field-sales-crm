@@ -78,3 +78,6 @@ test('persistence omits the rebuildable catalog while preserving private prices 
  const c=run(context(),'crm-state.js');const state={leads:[{id:'keep'}],vapeProducts:[{id:'catalog'}],vapePrivatePrices:{VP001:2},_quoteFromCart:true};
  const saved=JSON.parse(c.nexaroState.serialize(state));assert.equal(saved.vapeProducts,undefined);assert.equal(saved._quoteFromCart,undefined);assert.equal(saved.vapePrivatePrices.VP001,2);assert.equal(saved.leads[0].id,'keep');assert.equal(state.vapeProducts.length,1);
 });
+test('every shipped JavaScript file parses before deployment',()=>{
+ for(const file of require('node:fs').readdirSync(require('node:path').join(__dirname,'..')).filter(name=>name.endsWith('.js'))){assert.doesNotThrow(()=>new vm.Script(read(file),{filename:file}),file)}
+});
