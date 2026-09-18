@@ -24,7 +24,12 @@
 
     showApp();
     if (window.nexaroLeadSync?.sync) {
-      await window.nexaroLeadSync.sync({ silent:false });
+      try {
+        await window.nexaroLeadSync.sync({ silent:false });
+      } catch {
+        if (typeof toast === 'function') toast('Angemeldet · Lead-Abgleich fehlgeschlagen. Bitte später erneut versuchen.');
+        return {ok:true, syncFailed:true};
+      }
     }
     return { ok:true };
   };

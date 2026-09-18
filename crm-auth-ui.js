@@ -13,6 +13,7 @@
     document.body.appendChild(box);
 
     const login = document.getElementById('nxAuthLogin');
+    box.addEventListener('keydown', e => { if (e.key === 'Enter' && !login.disabled) login.click(); });
     login.onclick = async () => {
       const msg = document.getElementById('nxAuthMessage');
       const email = document.getElementById('nxAuthEmail').value.trim();
@@ -33,5 +34,21 @@
   }
 
   // Scripts are loaded at the end of index.html, so the DOM already exists.
+  window.nexaroCRM.showLogin = ensureAuthGate;
   ensureAuthGate();
+  const logout = document.createElement('button');
+  logout.textContent = 'Abmelden';
+  logout.type = 'button';
+  logout.onclick = () => window.nexaroAuth.logout();
+  document.getElementById('nav')?.appendChild(logout);
+  const restore = async () => {
+    try {
+      const result = await window.nexaroCRM.startSecureMode();
+      if (result.ok) document.getElementById('nexaroAuthGate')?.remove();
+    } catch {
+      window.nexaroCRM.hideApp();
+    }
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', restore, {once:true});
+  else restore();
 })();
