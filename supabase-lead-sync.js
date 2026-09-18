@@ -18,6 +18,9 @@
       address: p.city || '',
       source: p.source || 'QR-Code Flyer',
       status: p.status || 'neu',
+      module: (p.interest || []).some(v => /vape/i.test(v)) && !(p.interest || []).some(v => /sumup/i.test(v)) ? 'vape' : 'sumup',
+      provider: p.sumup_provider || '',
+      tpv: Number(String(p.sumup_volume || '').replace(/\s|€/g, '').replace(/\.(?=\d{3}(?:\D|$))/g, '').replace(',', '.')) || 0,
       priority: 'Hoch',
       interest: Array.isArray(p.interest) ? p.interest : [],
       need: p.requirement || '',
@@ -46,24 +49,27 @@
     if (!response.ok) throw new Error(`Supabase Lead-Sync fehlgeschlagen (${response.status})`);
     const remote = await response.json();
     let imported = 0;
+    let linked = 0;
 
     for (const p of remote) {
       const mapped = mapPublicLeadToCrmLead(p);
       const existing = S.leads.find(l => l.publicLeadId === p.id || (normEmail(l.email) && normEmail(l.email) === normEmail(mapped.email) && normCompany(l.company) === normCompany(mapped.company)));
       if (existing) {
-        Object.assign(existing, mapped);
+        // Intake is an import, not a source of truth for local sales work.
+        if (!existing.publicLeadId) { existing.publicLeadId = p.id; linked++; }
         continue;
       }
       S.leads.unshift(mapped);
+      if (typeof ensureCustomerForLead === 'function') ensureCustomerForLead(mapped.id);
       imported++;
     }
 
-    if (imported) {
+    if (imported || linked) {
       if (typeof save === 'function') save();
       if (typeof render === 'function') render();
-      if (!silent && typeof toast === 'function') toast(`${imported} neue QR-Leads importiert`);
+      if (imported && !silent && typeof toast === 'function') toast(`${imported} neue QR-Leads importiert`);
     }
-    return {ok:true, skipped:false, imported, total:remote.length};
+    return {ok:true, skipped:false, imported, linked, total:remote.length};
   }
 
   window.nexaroLeadSync = {mapPublicLeadToCrmLead, syncPublicLeads, sync:syncPublicLeads};
