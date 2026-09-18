@@ -23,13 +23,13 @@ test('auth validates a legacy token with the server',async()=>{
 });
 test('sync preserves local IDs, status, notes and customer links',async()=>{
  const c=context({S:{leads:[{id:'local-1',publicLeadId:'r1',company:'Shop',email:'a@test.de',status:'gewonnen',notes:'Visit note',customerId:'c1'}]},
- nexaroAuth:{session:{access_token:'valid'},headers:{},restore:async()=>({ok:true})},fetch:async()=>Response.json([{id:'r1',company:'Shop',email:'a@test.de',status:'neu',message:'Old message'}]),save(){},render(){}});
+ nexaroAuth:{session:{access_token:'valid'},headers:{},restore:async()=>({ok:true})},fetch:async url=>Response.json(url.includes('offset=0')?[{id:'r1',company:'Shop',email:'a@test.de',status:'neu',message:'Old message'}]:[]),save(){},render(){}});
  run(c,'supabase-lead-sync.js');await c.nexaroLeadSync.sync();
  assert.equal(c.S.leads[0].id,'local-1');assert.equal(c.S.leads[0].status,'gewonnen');assert.equal(c.S.leads[0].notes,'Visit note');assert.equal(c.S.leads[0].customerId,'c1');
 });
 test('sync persists a deduplication link even without a new lead',async()=>{
  let saved=0;const c=context({S:{leads:[{id:'local-1',company:'Shop',email:'a@test.de'}]},
- nexaroAuth:{session:{access_token:'valid'},headers:{},restore:async()=>({ok:true})},fetch:async()=>Response.json([{id:'r1',company:'Shop',email:'a@test.de'}]),save(){saved++},render(){}});
+ nexaroAuth:{session:{access_token:'valid'},headers:{},restore:async()=>({ok:true})},fetch:async url=>Response.json(url.includes('offset=0')?[{id:'r1',company:'Shop',email:'a@test.de'}]:[]),save(){saved++},render(){}});
  run(c,'supabase-lead-sync.js');await c.nexaroLeadSync.sync();assert.equal(c.S.leads[0].publicLeadId,'r1');assert.equal(saved,1);
 });
 test('a failed lead sync does not turn successful authentication into failed login',async()=>{
@@ -64,4 +64,13 @@ test('state rejects malformed backups before replacing existing data',()=>{
  for(const bad of [null,[],{leads:'bad'},{tasks:[null]},{quotes:[{items:{}}]},{customerSequence:-1}])assert.throws(()=>c.nexaroState.normalize(bad));
  const state=c.nexaroState.normalize({leads:[{id:'keep',company:'Shop'}]});
  assert.equal(state.leads[0].id,'keep');assert.ok(Array.isArray(state.vapeQuotes));assert.ok(Array.isArray(state.vapeCart));
+});
+test('sync reads beyond 200 leads and coalesces concurrent imports',async()=>{
+ let requests=0,saves=0;const c=context({S:{leads:[]},nexaroAuth:{session:{access_token:'valid'},headers:{}},save(){saves++},render(){},fetch:async url=>{requests++;const offset=Number(new URL(url).searchParams.get('offset'));return Response.json(Array.from({length:Math.min(200,Math.max(0,450-offset))},(_,i)=>({id:String(offset+i),company:'Shop '+(offset+i)})))}});
+ run(c,'supabase-lead-sync.js');const [a,b]=await Promise.all([c.nexaroLeadSync.sync(),c.nexaroLeadSync.sync()]);
+ assert.equal(a.imported,450);assert.equal(b.imported,450);assert.equal(c.S.leads.length,450);assert.equal(saves,1);assert.equal(requests,4);
+});
+test('failed later sync page does not partially modify local CRM',async()=>{
+ const c=context({S:{leads:[]},nexaroAuth:{session:{access_token:'valid'},headers:{}},fetch:async url=>url.includes('offset=0')?Response.json([{id:'r1'}]):new Response('',{status:503})});
+ run(c,'supabase-lead-sync.js');await assert.rejects(()=>c.nexaroLeadSync.sync());assert.equal(c.S.leads.length,0);
 });
