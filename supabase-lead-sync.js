@@ -18,6 +18,9 @@
       address: p.city || '',
       source: p.source || 'QR-Code Flyer',
       status: p.status || 'neu',
+      module: (p.interest || []).some(v => /vape/i.test(v)) && !(p.interest || []).some(v => /sumup/i.test(v)) ? 'vape' : 'sumup',
+      provider: p.sumup_provider || '',
+      tpv: Number(String(p.sumup_volume || '').replace(/\s|€/g, '').replace(/\.(?=\d{3}(?:\D|$))/g, '').replace(',', '.')) || 0,
       priority: 'Hoch',
       interest: Array.isArray(p.interest) ? p.interest : [],
       need: p.requirement || '',
@@ -35,36 +38,61 @@
     };
   }
 
-  async function syncPublicLeads({silent = false} = {}) {
+  let pendingSync = null;
+  async function importPublicLeads({silent = false} = {}) {
     if (!CONFIG.url || !CONFIG.key) return {ok:false, skipped:true, imported:0, reason:'config-missing'};
     if (!window.nexaroAuth?.session?.access_token) return {ok:false, skipped:true, imported:0, reason:'not-authenticated'};
     if (typeof S === 'undefined') return {ok:false, skipped:true, imported:0, reason:'crm-not-ready'};
 
-    const response = await fetch(`${CONFIG.url}/rest/v1/public_leads?select=*&order=created_at.desc&limit=200`, {
-      headers: {...window.nexaroAuth.headers, Accept:'application/json'}
-    });
-    if (!response.ok) throw new Error(`Supabase Lead-Sync fehlgeschlagen (${response.status})`);
-    const remote = await response.json();
+    // Read all pages before changing local state, so a later failed page cannot
+    // leave a partially imported batch. Stable ordering prevents timestamp ties.
+    const remote = [];
+    const pageSize = 200;
+    let offset = 0;
+    while (true) {
+      const response = await fetch(`${CONFIG.url}/rest/v1/public_leads?select=*&order=created_at.asc,id.asc&limit=${pageSize}&offset=${offset}`, {
+        headers: {...window.nexaroAuth.headers, Accept:'application/json'},
+        signal: AbortSignal.timeout(15000)
+      });
+      if (!response.ok) throw new Error(`Supabase Lead-Sync fehlgeschlagen (${response.status})`);
+      const page = await response.json();
+      if (!Array.isArray(page) || page.some(row => !row || !row.id)) throw new Error('Ungültige Lead-Antwort');
+      remote.push(...page);
+      if (!page.length) break;
+      offset += page.length;
+    }
+    const byPublicId = new Map(S.leads.filter(l => l.publicLeadId).map(l => [l.publicLeadId,l]));
+    const key = l => normEmail(l.email) ? JSON.stringify([normEmail(l.email),normCompany(l.company)]) : '';
+    const byContact = new Map(S.leads.filter(l => key(l)).map(l => [key(l),l]));
     let imported = 0;
+    let linked = 0;
 
     for (const p of remote) {
       const mapped = mapPublicLeadToCrmLead(p);
-      const existing = S.leads.find(l => l.publicLeadId === p.id || (normEmail(l.email) && normEmail(l.email) === normEmail(mapped.email) && normCompany(l.company) === normCompany(mapped.company)));
+      const existing = byPublicId.get(p.id) || byContact.get(key(mapped));
       if (existing) {
-        Object.assign(existing, mapped);
+        // Intake is an import, not a source of truth for local sales work.
+        if (!existing.publicLeadId) { existing.publicLeadId = p.id; byPublicId.set(p.id,existing); linked++; }
         continue;
       }
       S.leads.unshift(mapped);
+      byPublicId.set(p.id,mapped);
+      if (key(mapped)) byContact.set(key(mapped),mapped);
+      if (typeof ensureCustomerForLead === 'function') ensureCustomerForLead(mapped.id);
       imported++;
     }
 
-    if (imported) {
+    if (imported || linked) {
       if (typeof save === 'function') save();
       if (typeof render === 'function') render();
-      if (!silent && typeof toast === 'function') toast(`${imported} neue QR-Leads importiert`);
+      if (imported && !silent && typeof toast === 'function') toast(`${imported} neue QR-Leads importiert`);
     }
-    return {ok:true, skipped:false, imported, total:remote.length};
+    return {ok:true, skipped:false, imported, linked, total:remote.length};
   }
 
+  function syncPublicLeads(options) {
+    if (!pendingSync) pendingSync = importPublicLeads(options).finally(() => { pendingSync = null; });
+    return pendingSync;
+  }
   window.nexaroLeadSync = {mapPublicLeadToCrmLead, syncPublicLeads, sync:syncPublicLeads};
 })();
