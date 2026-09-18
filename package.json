@@ -1,0 +1,9 @@
+{
+  "name": "nexaro-field-sales-crm",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/regressions.test.cjs",
+    "test:browser": "node tests/browser.cjs"
+  },
+  "devDependencies": {"playwright": "1.62.1"}
+}

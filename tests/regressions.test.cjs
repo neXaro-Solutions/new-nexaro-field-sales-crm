@@ -81,3 +81,15 @@ test('persistence omits the rebuildable catalog while preserving private prices 
 test('every shipped JavaScript file parses before deployment',()=>{
  for(const file of require('node:fs').readdirSync(require('node:path').join(__dirname,'..')).filter(name=>name.endsWith('.js'))){assert.doesNotThrow(()=>new vm.Script(read(file),{filename:file}),file)}
 });
+test('auth refreshes an expired session and stores the rotated refresh token',async()=>{
+ const calls=[];const c=context({fetch:async(url,options)=>{calls.push(url);if(url.includes('grant_type=refresh_token'))return Response.json({access_token:'new',refresh_token:'rotated'});return options.headers.Authorization==='Bearer old'?new Response('{}',{status:401}):Response.json({id:'u1'})}});
+ c.localStorage.setItem('nexaro-supabase-session',JSON.stringify({access_token:'old',refresh_token:'refresh'}));run(c,'supabase-auth.js');
+ assert.equal((await c.nexaroAuth.restore()).ok,true);assert.equal(c.nexaroAuth.session.access_token,'new');assert.equal(JSON.parse(c.localStorage.getItem('nexaro-supabase-session')).refresh_token,'rotated');assert.equal(calls.length,3);
+});
+test('temporary auth outage keeps recovery credentials but does not unlock',async()=>{
+ const c=context({fetch:async()=>{throw Error('offline')}});c.localStorage.setItem('nexaro-supabase-access-token','valid');run(c,'supabase-auth.js');
+ assert.equal((await c.nexaroAuth.restore()).ok,false);assert.equal(c.nexaroAuth.session,null);assert.equal(c.localStorage.getItem('nexaro-supabase-access-token'),'valid');
+});
+test('SumUp recommendation returns the selected business without a reference error',()=>{
+ const c=run(context(),'sumup-advisor-fix.js');const r=c.neXaroSumUp.recommend({business:'retail',tpv:5000,pos:'no',smartphone:'yes',device:'small'});assert.equal(r.business,'retail');assert.ok(r.hardware);assert.equal(r.tariff,'plus');
+});
