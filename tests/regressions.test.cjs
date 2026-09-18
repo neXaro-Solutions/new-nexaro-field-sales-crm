@@ -74,3 +74,7 @@ test('failed later sync page does not partially modify local CRM',async()=>{
  const c=context({S:{leads:[]},nexaroAuth:{session:{access_token:'valid'},headers:{}},fetch:async url=>url.includes('offset=0')?Response.json([{id:'r1'}]):new Response('',{status:503})});
  run(c,'supabase-lead-sync.js');await assert.rejects(()=>c.nexaroLeadSync.sync());assert.equal(c.S.leads.length,0);
 });
+test('persistence omits the rebuildable catalog while preserving private prices and sales',()=>{
+ const c=run(context(),'crm-state.js');const state={leads:[{id:'keep'}],vapeProducts:[{id:'catalog'}],vapePrivatePrices:{VP001:2},_quoteFromCart:true};
+ const saved=JSON.parse(c.nexaroState.serialize(state));assert.equal(saved.vapeProducts,undefined);assert.equal(saved._quoteFromCart,undefined);assert.equal(saved.vapePrivatePrices.VP001,2);assert.equal(saved.leads[0].id,'keep');assert.equal(state.vapeProducts.length,1);
+});

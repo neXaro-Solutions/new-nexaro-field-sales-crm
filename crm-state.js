@@ -28,5 +28,10 @@
     state.vapeMarkup = Math.min(25,Math.max(15,Number(state.vapeMarkup)||25));
     return state;
   }
-  window.nexaroState = {normalize};
+  function serialize(state) {
+    // The public catalog is rebuilt from the shipped data at each startup.
+    const {vapeProducts, _quoteFromCart, ...persistent} = state;
+    return JSON.stringify(persistent);
+  }
+  window.nexaroState = {normalize, serialize};
 })();

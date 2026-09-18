@@ -34,7 +34,7 @@ function migrateCustomers(){for(const l of S.leads){if(l.customerId&&customerByI
 S.quotes=(S.quotes||[]).map(q=>({...q,items:q.items||[{description:q.product||"",qty:q.qty||1,unit:q.unit||"Stück",price:q.price||0}]}));
 S.vapeCart=Array.isArray(S.vapeCart)?S.vapeCart:[];
 let lf="all",tf="open",area=null,route=[];
-const save=()=>localStorage.setItem(KEY,JSON.stringify(S));
+const save=()=>localStorage.setItem(KEY,window.nexaroState.serialize(S));
 normalizeAddresses();migrateCustomers();save();
 const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1900)};
 const close=id=>$("#"+id)?.close(), open=id=>$("#"+id)?.showModal();
@@ -311,7 +311,7 @@ $("#quoteList").onclick=e=>{let id=e.target.closest("[data-pdfquote]")?.dataset.
 
 function csv(){const rows=[['Firma','Branche','Status','Kontakt','Telefon','E-Mail','Adresse','TPV','Qualifizierung','Produkt','Priorität','Nächste Aktion','Nächster Kontakt'],...S.leads.map(l=>[l.company,l.industry,l.status,l.contact,l.phone,l.email,l.address,l.tpv,l.qualification,l.product,l.priority,l.next,l.due])];download('nexaro-leads.csv',rows.map(r=>r.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(';')).join('\n'),'text/csv;charset=utf-8')}
 function download(name,data,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-$('#restoreInput').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const next=prepareState(JSON.parse(r.result));localStorage.setItem(KEY,JSON.stringify(next));S=next;normalizeAddresses();migrateCustomers();save();render();toast('Backup wiederhergestellt')}catch{toast('Backup ungültig')}};r.readAsText(f)};
+$('#restoreInput').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const next=prepareState(JSON.parse(r.result));localStorage.setItem(KEY,window.nexaroState.serialize(next));S=next;normalizeAddresses();migrateCustomers();save();render();toast('Backup wiederhergestellt')}catch{toast('Backup ungültig')}};r.readAsText(f)};
 function demo(){S.leads=[{id:uid(),company:'Demo Kiosk',industry:'Kiosk / Späti',status:'neu',contact:'Max Beispiel',phone:'01700000000',email:'',address:'10115 Berlin',tpv:8500,qualified:true,qualification:'C',product:'Solo',priority:'Hoch',need:'Hohe Kartengebühren',next:'Tarifvergleich',due:today(),notes:''},{id:uid(),company:'Demo Gastro',industry:'Gastronomie',status:'termin',contact:'Anna Beispiel',phone:'',email:'',address:'10117 Berlin',tpv:18000,qualified:true,qualification:'A',product:'Terminal',priority:'Hoch',need:'Schnelleres Terminal',next:'Termin vor Ort',due:today(),notes:''}];S.tasks=[{id:uid(),title:'Demo Gastro besuchen',due:today(),leadId:S.leads[1].id,note:'Termin',done:false}];save();render();toast('Demo-Daten angelegt')}
 function render(){renderDash();leads();tasks();renderPipeline();docs();if($('#more')?.classList.contains('active'))docs()}
 render();
