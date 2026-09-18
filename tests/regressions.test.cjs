@@ -59,3 +59,9 @@ test('all local startup resources are included in the offline cache',()=>{
  const html=read('index.html');const scripts=[...html.matchAll(/<script src="([^"]+)"/g)].map(m=>'./'+m[1]);
  for(const src of scripts)assert.ok(assets.includes(src),`missing cache entry: ${src}`);
 });
+test('state rejects malformed backups before replacing existing data',()=>{
+ const c=run(context(),'crm-state.js');
+ for(const bad of [null,[],{leads:'bad'},{tasks:[null]},{quotes:[{items:{}}]},{customerSequence:-1}])assert.throws(()=>c.nexaroState.normalize(bad));
+ const state=c.nexaroState.normalize({leads:[{id:'keep',company:'Shop'}]});
+ assert.equal(state.leads[0].id,'keep');assert.ok(Array.isArray(state.vapeQuotes));assert.ok(Array.isArray(state.vapeCart));
+});
