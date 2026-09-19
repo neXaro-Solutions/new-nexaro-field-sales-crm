@@ -1,0 +1,61 @@
+name: Sync Sales Hub to live Pages
+on:
+  workflow_dispatch:
+  schedule:
+    # GitHub schedules can be delayed; latest source main is picked up automatically.
+    - cron: "*/15 * * * *"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/sync-sales-hub.yml"
+permissions:
+  contents: write
+concurrency:
+  group: sync-sales-hub-live
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout live website
+        uses: actions/checkout@v4
+        with:
+          path: live
+          persist-credentials: true
+      - name: Checkout Sales Hub source
+        uses: actions/checkout@v4
+        with:
+          repository: neXaro-Solutions/nexaro-sales-hub
+          ref: main
+          path: source
+          persist-credentials: false
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: source/package-lock.json
+      - name: Install and verify
+        working-directory: source
+        run: |
+          npm ci --ignore-scripts
+          npm run check
+      - name: Update only the live hub folder
+        run: |
+          test -s source/dist/index.html
+          mkdir -p live/hub
+          rsync -a --delete source/dist/ live/hub/
+          test -s live/hub/index.html
+      - name: Publish only when the build changed
+        working-directory: live
+        run: |
+          git add -A hub/
+          if git diff --cached --quiet; then
+            echo "Live hub already matches source; nothing to publish."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "deploy(hub): sync verified Sales Hub from source main"
+          git push
