@@ -1,4 +1,4 @@
-# Foto hochladen / aufnehmen -> OCR -> sofort Ist-Bestand, ohne Bestätigung; Schritt 1 nur Foto.
+# Foto -> OCR ohne Bestätigung -> Ist-Bestand; OCR test fixture fixed.
 name: Sync Sales Hub to live Pages
 on:
   workflow_dispatch:
