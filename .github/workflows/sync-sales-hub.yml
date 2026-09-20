@@ -1,4 +1,4 @@
-# Außendienst UI / Vape photo-first shop / dual SumUp image inputs · 2026-09-20
+# CRM mobile sales redesign: Vape shop, private photos, EAN/OCR, dual SumUp upload, tests.
 name: Sync Sales Hub to live Pages
 on:
   workflow_dispatch:
