@@ -1,4 +1,4 @@
-# Photo confirmed -> close photo modal -> show Ist-Bestand with OCR values, v20260920.
+# Foto hochladen / aufnehmen -> OCR -> sofort Ist-Bestand, ohne Bestätigung; Schritt 1 nur Foto.
 name: Sync Sales Hub to live Pages
 on:
   workflow_dispatch:
