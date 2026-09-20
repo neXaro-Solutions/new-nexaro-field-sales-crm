@@ -1,4 +1,4 @@
-# iPhone layout + SumUp numeric sliders + saved offer print and sharing 2026-09-20.
+# Fix SumUp live bars and no-overlap benefit grid in the existing CRM.
 name: Sync Sales Hub to live Pages
 on:
   workflow_dispatch:
