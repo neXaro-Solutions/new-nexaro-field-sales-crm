@@ -1,4 +1,4 @@
-# SumUp field studio: 1 photo import, 2 current state, 3 editable comparison offer.
+# SumUp offer: print official Germany card rates and direct monthly comparison, without double billing.
 name: Sync Sales Hub to live Pages
 on:
   workflow_dispatch:
