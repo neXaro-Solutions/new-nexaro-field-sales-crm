@@ -1,4 +1,4 @@
-# Final CRM consolidation: knowledge, document test, 80/20 debit/credit, regular hardware prices.
+# CRM visible release: unified dashboard, shared navigation and normal hardware prices.
 name: Sync Sales Hub to live Pages
 on:
   workflow_dispatch:
