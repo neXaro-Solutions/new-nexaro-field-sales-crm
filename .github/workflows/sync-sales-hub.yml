@@ -1,4 +1,4 @@
-# Fix mobile card-mix layout and allow numbered customer-free offer drafts in central CRM.
+# Fix mobile input spacing + allow customer-free offer draft, TypeScript corrected.
 name: Sync Sales Hub to live Pages
 on:
   workflow_dispatch:
