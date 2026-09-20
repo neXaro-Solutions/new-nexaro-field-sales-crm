@@ -1,4 +1,4 @@
-# CRM mobile sales redesign: Vape shop, private photos, EAN/OCR, dual SumUp upload, tests.
+# SumUp field studio: 1 photo import, 2 current state, 3 editable comparison offer.
 name: Sync Sales Hub to live Pages
 on:
   workflow_dispatch:
