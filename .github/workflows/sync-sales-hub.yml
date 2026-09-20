@@ -1,4 +1,4 @@
-# Manual source alignment requested on 2026-09-20; publish tested source into existing /hub/.
+# Final CRM consolidation: knowledge, document test, 80/20 debit/credit, regular hardware prices.
 name: Sync Sales Hub to live Pages
 on:
   workflow_dispatch:
