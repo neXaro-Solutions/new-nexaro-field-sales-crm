@@ -1,4 +1,4 @@
-# Central customer records plus searched-location OSM map and simplified route UI.
+# Light theme: white CRM with orange / neon green / neon yellow, logo unchanged.
 name: Sync Sales Hub to live Pages
 on:
   workflow_dispatch:
