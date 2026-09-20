@@ -1,4 +1,4 @@
-# SumUp offer: print official Germany card rates and direct monthly comparison, without double billing.
+# Photo confirmed -> close photo modal -> show Ist-Bestand with OCR values, v20260920.
 name: Sync Sales Hub to live Pages
 on:
   workflow_dispatch:
