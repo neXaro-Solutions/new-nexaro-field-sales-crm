@@ -1,4 +1,4 @@
-# Foto -> OCR ohne Bestätigung -> Ist-Bestand; OCR test fixture fixed.
+# Fix mobile card-mix layout and allow numbered customer-free offer drafts in central CRM.
 name: Sync Sales Hub to live Pages
 on:
   workflow_dispatch:
