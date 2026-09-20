@@ -1,4 +1,4 @@
-# Fix SumUp live bars and no-overlap benefit grid in the existing CRM.
+# Central customer records plus searched-location OSM map and simplified route UI.
 name: Sync Sales Hub to live Pages
 on:
   workflow_dispatch:
