@@ -1,5 +1,5 @@
 # Light theme: white CRM with orange / neon green / neon yellow, logo unchanged.
-# Sync canonical nexaro-sales-hub source after branded CRM illustrations and icon refresh (2026-09-21).
+# Sync canonical source after PDF vape catalog import and bulk photo uploader (2026-09-21).
 name: Sync Sales Hub to live Pages
 on:
   workflow_dispatch:
