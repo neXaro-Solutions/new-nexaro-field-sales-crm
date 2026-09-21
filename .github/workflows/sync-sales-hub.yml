@@ -1,5 +1,5 @@
 # Light theme: white CRM with orange / neon green / neon yellow, logo unchanged.
-# Sync canonical nexaro-sales-hub source after confirmed card-mix and fee-rate prefill (2026-09-21).
+# Sync canonical nexaro-sales-hub source after no-fixed-term standard tariff and cleaner matrix (2026-09-21).
 name: Sync Sales Hub to live Pages
 on:
   workflow_dispatch:
