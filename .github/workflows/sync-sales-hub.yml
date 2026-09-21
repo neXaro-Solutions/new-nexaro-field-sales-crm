@@ -1,5 +1,5 @@
 # Light theme: white CRM with orange / neon green / neon yellow, logo unchanged.
-# Sync canonical Sales Hub source after TESTPAY tabular statement OCR regression fix (2026-09-21).
+# Sync canonical Sales Hub source after split-column OCR fee fix and visible rate provenance (2026-09-21).
 name: Sync Sales Hub to live Pages
 on:
   workflow_dispatch:
