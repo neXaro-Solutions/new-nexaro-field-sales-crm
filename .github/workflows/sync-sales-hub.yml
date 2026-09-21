@@ -1,5 +1,5 @@
 # Light theme: white CRM with orange / neon green / neon yellow, logo unchanged.
-# Sync canonical Sales Hub source after Vape multi-product cart and offer checkout (2026-09-21).
+# Sync canonical Sales Hub source after final Vape cart card fix (2026-09-21).
 name: Sync Sales Hub to live Pages
 on:
   workflow_dispatch:
