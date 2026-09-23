@@ -1,4 +1,4 @@
-# Sync verified source with public-facility, hospital and government-office prospect exclusions.
+# Sync verified source with opt-in iPhone calendar appointment transfer.
 # Sync canonical Sales Hub source after repaired payment-statement table OCR and independently checked debit fee (2026-09-21).
 name: Sync Sales Hub to live Pages
 on:
