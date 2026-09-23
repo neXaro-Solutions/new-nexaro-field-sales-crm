@@ -1,4 +1,4 @@
-# Publish interactive dashboard CRM calendar with one-way iCloud integration still disabled.
+# Publish direct editing of existing appointments from the dashboard calendar.
 # Sync canonical Sales Hub source after repaired payment-statement table OCR and independently checked debit fee (2026-09-21).
 name: Sync Sales Hub to live Pages
 on:
