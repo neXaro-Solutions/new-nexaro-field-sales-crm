@@ -1,4 +1,4 @@
-# Publish customer delete actions with safe linkage checks and pending offer delete action (2026-09-24).
+# Rebuild after fixing offer deletion TypeScript check; includes customer and lead deletion controls (2026-09-24).
 # Sync canonical Sales Hub source after repaired payment-statement table OCR and independently checked debit fee (2026-09-21).
 name: Sync Sales Hub to live Pages
 on:
