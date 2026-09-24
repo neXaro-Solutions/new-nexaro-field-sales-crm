@@ -1,4 +1,4 @@
-# Verify consolidated Hunter workspace and saved routes after JSX fix (2026-09-24).
+# Publish simplified Hunter lead cards and single route workflow (2026-09-24).
 # Sync canonical Sales Hub source after repaired payment-statement table OCR and independently checked debit fee (2026-09-21).
 name: Sync Sales Hub to live Pages
 on:
