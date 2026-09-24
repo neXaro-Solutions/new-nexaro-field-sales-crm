@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="theme-color" content="#121310" />
+    <meta name="theme-color" content="#ffffff" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta
       http-equiv="Content-Security-Policy"
@@ -16,15 +16,15 @@
     <main>
       <section class="story">
         <div class="brand">ne<span>X</span>aro<small>SOLUTIONS</small></div>
-        <p class="eyebrow">SUMUP · PAYMENT · PERSÖNLICHE BERATUNG</p>
-        <h1>Kartengebühren<br /><span>transparent vergleichen.</span></h1>
+        <p class="eyebrow">SUMUP · UNVERBINDLICH · PERSÖNLICH</p>
+        <h1>Kartenzahlungen?<br /><span>Wir beraten Sie.</span></h1>
         <p>
-          Lassen Sie unverbindlich prüfen, wie sich Ihre derzeitigen Kartenzahlungsgebühren mit passenden SumUp-Optionen vergleichen lassen.
+          Fragen Sie Ihre kostenlose SumUp-Beratung an. Wenn Sie direkt ein genauer vorbereitetes Angebot möchten, können Sie freiwillig Ihre Händlerabrechnung hochladen.
         </p>
         <ul>
-          <li>Individuelle Beratung statt pauschaler Sparversprechen</li>
-          <li>Auf Wunsch Ihre vorhandenen Gebühren gegenüberstellen</li>
-          <li>Persönlicher Kontakt durch neXaro Solutions</li>
+          <li>Kurze Anfrage – ohne Abrechnung möglich</li>
+          <li>Optional: Abrechnung für ein passenderes Angebot</li>
+          <li>Persönliche Rückmeldung von neXaro Solutions</li>
         </ul>
         <div class="contact">
           <b>Gemeinsam mehr erreichen.</b
@@ -35,75 +35,32 @@
       </section>
       <section class="form-panel">
         <span class="eyebrow">IHR NÄCHSTER SCHRITT</span>
-        <h2>Ihren Gebührenvergleich anfragen.</h2>
+        <h2>Kostenlose SumUp-Beratung anfragen.</h2>
         <p>
-          Tragen Sie Ihre Kontaktdaten und optional Ihr ungefähres monatliches Kartenvolumen ein. Wir melden uns zur Bearbeitung Ihrer konkreten Anfrage.
+          Nur wenige Angaben – wir melden uns persönlich. Eine Abrechnung ist ausschließlich für die optionale Angebotsvorbereitung erforderlich.
         </p>
         <form id="leadForm">
-          <input type="hidden" name="request_type" value="sumup_fee_check" />
+          <input type="hidden" name="request_type" value="sumup_consultation" />
           <input type="hidden" name="interest" value="sumup" />
           <fieldset>
+            <p class="form-section-label"><span>01</span> Ihre Kontaktdaten</p>
             <div class="grid">
-              <label
-                >Unternehmen *<input
-                  name="company"
-                  required
-                  maxlength="200"
-                  autocomplete="organization" /></label
-              ><label
-                >Ansprechpartner *<input
-                  name="contact"
-                  required
-                  maxlength="160"
-                  autocomplete="name" /></label
-              ><label
-                >E-Mail *<input
-                  type="email"
-                  name="email"
-                  required
-                  maxlength="254"
-                  autocomplete="email" /></label
-              ><label
-                >Telefon<input
-                  type="tel"
-                  name="phone"
-                  maxlength="40"
-                  autocomplete="tel" /></label
-              ><label
-                >Straße / Hausnummer<input
-                  name="street"
-                  maxlength="200"
-                  autocomplete="street-address" /></label
-              ><label
-                >PLZ<input
-                  name="zip"
-                  maxlength="12"
-                  autocomplete="postal-code" /></label
-              ><label
-                >Ort *<input
-                  name="city"
-                  required
-                  maxlength="120"
-                  autocomplete="address-level2" /></label
-              ><label
-                >Branche<input
-                  name="industry"
-                  maxlength="100"
-                  placeholder="z. B. Kiosk, Gastronomie, Einzelhandel"
-              /></label>
+              <label>Unternehmen *<input name="company" required maxlength="200" autocomplete="organization" placeholder="Ihr Unternehmen" /></label>
+              <label>Ansprechpartner *<input name="contact" required maxlength="160" autocomplete="name" placeholder="Ihr Name" /></label>
+              <label>E-Mail *<input name="email" type="email" required maxlength="254" autocomplete="email" placeholder="name@unternehmen.de" /></label>
+              <label>Telefon (optional)<input name="phone" type="tel" maxlength="40" autocomplete="tel" placeholder="Für einen gewünschten Rückruf" /></label>
+              <label>Ort *<input name="city" required maxlength="120" autocomplete="address-level2" placeholder="z. B. Berlin" /></label>
             </div>
-            <div class="grid">
-              <label>Monatlicher Kartenumsatz (ca. EUR, optional)
-                <input type="number" name="monthly_volume" min="0" max="100000000" step="0.01" inputmode="decimal" placeholder="z. B. 15000" />
-              </label>
-              <label>Bisheriger Zahlungsanbieter (optional)
-                <input name="current_provider" maxlength="100" placeholder="z. B. Hausbank oder Zahlungsdienstleister" />
-              </label>
+            <label>Ihre Nachricht (optional)<textarea name="message" maxlength="3000" rows="3" placeholder="Was wünschen Sie sich von SumUp?"></textarea></label>
+            <div class="offer-option">
+              <label class="offer-choice"><input id="offerMode" type="checkbox" /><span><strong>Optional: Abrechnung hochladen und passendes Angebot vorbereiten lassen</strong><small>Für eine gezieltere Gebührengegenüberstellung. Ihre einfache Beratungsanfrage funktioniert auch ohne Upload.</small></span></label>
+              <div id="offerDetails" hidden>
+                <label>Händlerabrechnung * (PDF, JPG, PNG oder WebP; max. 8 MB)
+                  <input id="statementFile" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" />
+                </label>
+                <p class="upload-advice">Bitte Konto-/IBAN-Daten, Kartennummern, Transaktions- und Personendetails vor dem Upload schwärzen. Für den Vergleich sind vor allem Umsatz, Gebühren und Kartentypen wichtig. Originalunterlagen werden privat gespeichert und erst nach Ihrer Absendung übermittelt.</p>
+              </div>
             </div>
-            <label>Ihr Beratungswunsch
-              <textarea name="message" maxlength="3000" rows="4" placeholder="Was sollen wir vergleichen? Bitte keine Karten-, Konto- oder Zugangsdaten eingeben."></textarea>
-            </label>
-            <p class="eyebrow">Persönlicher Vergleich auf Anfrage · keine automatische Werbe-Serie.</p>
             <div class="trap" aria-hidden="true">
               <label
                 >Website<input name="website" tabindex="-1" autocomplete="off"
@@ -111,12 +68,12 @@
             </div>
             <label class="consent"
               ><input type="checkbox" name="consent" required /><span
-                >Ich möchte den SumUp-Gebührenvergleich anfragen und erlaube neXaro Solutions, mich ausschließlich zur Bearbeitung dieser konkreten Anfrage zu kontaktieren. Dies ist keine Einwilligung in weitere Werbe-E-Mails.
+                >Ich möchte die ausgewählte SumUp-Beratung beziehungsweise Angebotsvorbereitung anfragen. neXaro Solutions darf mich ausschließlich dazu kontaktieren und eine optional hochgeladene Abrechnung hierfür auswerten. Dies ist keine Einwilligung in weitere Werbe-E-Mails.
                 Die <a href="#privacy">Datenschutzhinweise</a> habe ich gelesen.
                 *</span
               ></label
             ><button type="submit" id="submitLead">
-              Gebührenvergleich anfragen <span>↗</span>
+              Beratung anfragen <span>↗</span>
             </button>
             <p id="result" role="status" aria-live="polite"></p>
           </fieldset>
@@ -129,11 +86,11 @@
     </main>
     <footer>
       <details id="privacy">
-        <summary>Datenschutzhinweise zum SumUp-Gebührenvergleich</summary>
+        <summary>Datenschutzhinweise zur SumUp-Beratung und optionalen Abrechnung</summary>
         <p>
           Verantwortlich: neXaro Solutions, Sebastian Pötschke, Kirchstraße 1A,
           15757 Halbe, kontakt@nexaro-solutions.de. Wir verarbeiten Ihre Angaben
-          zur Bearbeitung Ihres angefragten Gebührenvergleichs und zur damit zusammenhängenden Kontaktaufnahme.
+          zur Bearbeitung Ihrer Beratungsanfrage beziehungsweise, nur wenn ausgewählt, zur Erstellung eines Gebührenvergleichs anhand der hochgeladenen Händlerabrechnung und zur damit zusammenhängenden Kontaktaufnahme. Die Datei wird in einem privaten, nicht öffentlich abrufbaren Speicherbereich hinterlegt.
           Die Daten werden im internen CRM auf Supabase-Infrastruktur in der
           EU-Region Irland gespeichert. Zur Missbrauchsbegrenzung wird ein nicht
           im Klartext gespeicherter, kryptografisch abgeleiteter IP-Wert
@@ -142,7 +99,7 @@
         </p>
         <p>
           Sie können einer werblichen Kontaktaufnahme jederzeit widersprechen. Diese Anfrage begründet keine Einwilligung in weitere Werbe-E-Mails. Ihre Kontaktfreigabe für die konkrete Anfrage können Sie jederzeit für die Zukunft widerrufen. Schreiben Sie dazu an kontakt@nexaro-solutions.de.
-          Anfragen ohne weitere Geschäftsbeziehung werden gelöscht, sobald sie
+          Anfragen und freiwillig übermittelte Abrechnungen ohne weitere Geschäftsbeziehung werden gelöscht, sobald sie
           nicht mehr benötigt werden, sofern keine Aufbewahrungspflichten
           bestehen. Sie können Auskunft, Berichtigung, Löschung oder
           Einschränkung der Verarbeitung verlangen und sich bei einer
