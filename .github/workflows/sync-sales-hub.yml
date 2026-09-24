@@ -1,4 +1,4 @@
-# Publish Hunter shortlist integration into existing daily route (2026-09-24).
+# Publish integrated HUNTER AUTO opt-in controls and inbound link (2026-09-24).
 # Sync canonical Sales Hub source after repaired payment-statement table OCR and independently checked debit fee (2026-09-21).
 name: Sync Sales Hub to live Pages
 on:
