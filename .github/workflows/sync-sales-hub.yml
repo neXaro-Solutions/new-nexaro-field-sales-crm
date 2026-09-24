@@ -1,4 +1,4 @@
-# Deploy optional private SumUp statement intake and bright CRM forms (2026-09-24).
+# Publish explicit SumUp fee-review gate after inbound OCR and preserve live intake (2026-09-24).
 # Sync canonical Sales Hub source after repaired payment-statement table OCR and independently checked debit fee (2026-09-21).
 name: Sync Sales Hub to live Pages
 on:
