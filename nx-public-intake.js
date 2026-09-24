@@ -4,6 +4,7 @@ const endpoint =
 const form = document.getElementById("leadForm");
 const result = document.getElementById("result");
 const button = document.getElementById("submitLead");
+const submitLabel=button.textContent.trim();
 let challenge = null,
   busy = false,
   receivedAt = 0;
@@ -70,7 +71,7 @@ form.addEventListener("submit", async (event) => {
   } finally {
     busy = false;
     button.disabled = false;
-    button.textContent = "Anfrage senden ↗";
+    button.textContent = submitLabel;
   }
 });
 // The previous CRM service worker used cache-first navigation. Remove only the
