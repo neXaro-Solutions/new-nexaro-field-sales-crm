@@ -1,4 +1,4 @@
-# Publish Hunter in-CRM tour selection and prospect deletion/acceptance controls (2026-09-24).
+# Build Hunter mobile route UI after TypeScript state fixes and customer edit integration (2026-09-24).
 # Sync canonical Sales Hub source after repaired payment-statement table OCR and independently checked debit fee (2026-09-21).
 name: Sync Sales Hub to live Pages
 on:
