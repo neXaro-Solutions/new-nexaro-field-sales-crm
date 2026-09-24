@@ -5,6 +5,33 @@ const form = document.getElementById("leadForm");
 const result = document.getElementById("result");
 const button = document.getElementById("submitLead");
 const submitLabel=button.textContent.trim();
+const offerMode=document.getElementById("offerMode");
+const offerDetails=document.getElementById("offerDetails");
+const statementFile=document.getElementById("statementFile");
+let pendingUpload=null;
+function toggleOffer(){
+ if(!offerMode)return;
+ offerDetails.hidden=!offerMode.checked;
+ statementFile.required=offerMode.checked;
+ const mode=form.querySelector('[name="request_type"]');
+ if(mode)mode.value=offerMode.checked?"sumup_fee_check":"sumup_consultation";
+}
+offerMode?.addEventListener("change",toggleOffer);
+toggleOffer();
+async function uploadStatement(challengeData,file){
+ const extension=(file?.name?.split(".").pop()||"").toLowerCase();
+ const allowed={pdf:"application/pdf",jpg:"image/jpeg",jpeg:"image/jpeg",png:"image/png",webp:"image/webp"};
+ if(!file||!allowed[extension]||file.type!==allowed[extension]||!file.size||file.size>8388608)
+  throw Error("Bitte nur PDF, JPG, PNG oder WebP bis 8 MB auswählen.");
+ const formData=new FormData();
+ formData.append("challenge",JSON.stringify(challengeData));
+ formData.append("statement",file,file.name);
+ const response=await fetch("https://hbuqzdmjqvgybwohfnqy.supabase.co/functions/v1/nx-public-statement",{
+  method:"POST",body:formData,signal:AbortSignal.timeout(45000)
+ });
+ if(!response.ok)throw Error(response.status===409?"Die Abrechnung wurde bereits übertragen.":"Abrechnung konnte nicht gespeichert werden. Bitte erneut versuchen oder direkt Kontakt aufnehmen.");
+}
+
 let challenge = null,
   busy = false,
   receivedAt = 0;
@@ -28,6 +55,16 @@ form.addEventListener("submit", async (event) => {
   button.textContent = "Anfrage wird gesendet …";
   result.textContent = "";
   try {
+    if(pendingUpload){
+      await uploadStatement(pendingUpload,statementFile?.files?.[0]);
+      result.textContent="Vielen Dank! Ihre Anfrage und Abrechnung sind sicher eingegangen. Wir melden uns persönlich.";
+      form.reset();pendingUpload=null;toggleOffer();challenge=null;
+      void loadChallenge().catch(()=>{});
+      return;
+    }
+    if(offerMode?.checked&&(!statementFile?.files?.length||statementFile.files[0].size>8388608)){
+      throw Error("Für die Angebotsvorbereitung bitte eine Abrechnung bis 8 MB hochladen. Alternativ die einfache Beratung auswählen.");
+    }
     if (!challenge || Date.now() - receivedAt > 3500000) await loadChallenge();
     const wait = Math.max(0, 2200 - (Date.now() - receivedAt));
     if (wait) await new Promise((resolve) => setTimeout(resolve, wait));
@@ -58,9 +95,21 @@ form.addEventListener("submit", async (event) => {
         "Die Anfrage konnte nicht bestätigt werden. Ihre Eingaben bleiben erhalten. Bitte erneut versuchen oder uns direkt kontaktieren.",
       );
     }
-    result.textContent =
-      "Vielen Dank! Ihre Anfrage ist eingegangen. Wir melden uns persönlich bei Ihnen.";
-    form.reset();
+    if(offerMode?.checked){
+      pendingUpload=challenge;
+      try{
+        await uploadStatement(challenge,statementFile.files[0]);
+        result.textContent="Vielen Dank! Ihre Anfrage und Abrechnung sind eingegangen. Wir melden uns persönlich.";
+        pendingUpload=null;
+      }catch(error){
+        result.textContent="Ihre Anfrage ist bereits im CRM gespeichert. Die Abrechnung konnte noch nicht übertragen werden. Bitte auf „Datei erneut hochladen“ klicken. "+(error instanceof Error?error.message:"");
+        button.textContent="Datei erneut hochladen ↗";
+        return;
+      }
+    }else{
+      result.textContent="Vielen Dank! Ihre Beratungsanfrage ist eingegangen. Wir melden uns persönlich bei Ihnen.";
+    }
+    form.reset();toggleOffer();
     challenge = null;
     void loadChallenge().catch(() => {});
   } catch (error) {
@@ -71,7 +120,7 @@ form.addEventListener("submit", async (event) => {
   } finally {
     busy = false;
     button.disabled = false;
-    button.textContent = submitLabel;
+    button.textContent = pendingUpload ? "Datei erneut hochladen ↗" : submitLabel;
   }
 });
 // The previous CRM service worker used cache-first navigation. Remove only the
