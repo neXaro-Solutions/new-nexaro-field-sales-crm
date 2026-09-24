@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#121310" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src https://hbuqzdmjqvgybwohfnqy.supabase.co; img-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests"
+    />
+    <title>Kostenlosen SumUp-Gebührenvergleich anfragen · neXaro Solutions</title>
+    <link rel="stylesheet" href="nx-public-intake.css" />
+  </head>
+  <body>
+    <main>
+      <section class="story">
+        <div class="brand">ne<span>X</span>aro<small>SOLUTIONS</small></div>
+        <p class="eyebrow">SUMUP · PAYMENT · PERSÖNLICHE BERATUNG</p>
+        <h1>Kartengebühren<br /><span>transparent vergleichen.</span></h1>
+        <p>
+          Lassen Sie unverbindlich prüfen, wie sich Ihre derzeitigen Kartenzahlungsgebühren mit passenden SumUp-Optionen vergleichen lassen.
+        </p>
+        <ul>
+          <li>Individuelle Beratung statt pauschaler Sparversprechen</li>
+          <li>Auf Wunsch Ihre vorhandenen Gebühren gegenüberstellen</li>
+          <li>Persönlicher Kontakt durch neXaro Solutions</li>
+        </ul>
+        <div class="contact">
+          <b>Gemeinsam mehr erreichen.</b
+          ><a href="mailto:kontakt@nexaro-solutions.de"
+            >kontakt@nexaro-solutions.de</a
+          ><a href="tel:+491719098831">0171 9098 831</a>
+        </div>
+      </section>
+      <section class="form-panel">
+        <span class="eyebrow">IHR NÄCHSTER SCHRITT</span>
+        <h2>Ihren Gebührenvergleich anfragen.</h2>
+        <p>
+          Tragen Sie Ihre Kontaktdaten und optional Ihr ungefähres monatliches Kartenvolumen ein. Wir melden uns zur Bearbeitung Ihrer konkreten Anfrage.
+        </p>
+        <form id="leadForm">
+          <input type="hidden" name="request_type" value="sumup_fee_check" />
+          <input type="hidden" name="interest" value="sumup" />
+          <fieldset>
+            <div class="grid">
+              <label
+                >Unternehmen *<input
+                  name="company"
+                  required
+                  maxlength="200"
+                  autocomplete="organization" /></label
+              ><label
+                >Ansprechpartner *<input
+                  name="contact"
+                  required
+                  maxlength="160"
+                  autocomplete="name" /></label
+              ><label
+                >E-Mail *<input
+                  type="email"
+                  name="email"
+                  required
+                  maxlength="254"
+                  autocomplete="email" /></label
+              ><label
+                >Telefon<input
+                  type="tel"
+                  name="phone"
+                  maxlength="40"
+                  autocomplete="tel" /></label
+              ><label
+                >Straße / Hausnummer<input
+                  name="street"
+                  maxlength="200"
+                  autocomplete="street-address" /></label
+              ><label
+                >PLZ<input
+                  name="zip"
+                  maxlength="12"
+                  autocomplete="postal-code" /></label
+              ><label
+                >Ort *<input
+                  name="city"
+                  required
+                  maxlength="120"
+                  autocomplete="address-level2" /></label
+              ><label
+                >Branche<input
+                  name="industry"
+                  maxlength="100"
+                  placeholder="z. B. Kiosk, Gastronomie, Einzelhandel"
+              /></label>
+            </div>
+            <div class="grid">
+              <label>Monatlicher Kartenumsatz (ca. EUR, optional)
+                <input type="number" name="monthly_volume" min="0" max="100000000" step="0.01" inputmode="decimal" placeholder="z. B. 15000" />
+              </label>
+              <label>Bisheriger Zahlungsanbieter (optional)
+                <input name="current_provider" maxlength="100" placeholder="z. B. Hausbank oder Zahlungsdienstleister" />
+              </label>
+            </div>
+            <label>Ihr Beratungswunsch
+              <textarea name="message" maxlength="3000" rows="4" placeholder="Was sollen wir vergleichen? Bitte keine Karten-, Konto- oder Zugangsdaten eingeben."></textarea>
+            </label>
+            <p class="eyebrow">Persönlicher Vergleich auf Anfrage · keine automatische Werbe-Serie.</p>
+            <div class="trap" aria-hidden="true">
+              <label
+                >Website<input name="website" tabindex="-1" autocomplete="off"
+              /></label>
+            </div>
+            <label class="consent"
+              ><input type="checkbox" name="consent" required /><span
+                >Ich möchte den SumUp-Gebührenvergleich anfragen und erlaube neXaro Solutions, mich ausschließlich zur Bearbeitung dieser konkreten Anfrage zu kontaktieren. Dies ist keine Einwilligung in weitere Werbe-E-Mails.
+                Die <a href="#privacy">Datenschutzhinweise</a> habe ich gelesen.
+                *</span
+              ></label
+            ><button type="submit" id="submitLead">
+              Gebührenvergleich anfragen <span>↗</span>
+            </button>
+            <p id="result" role="status" aria-live="polite"></p>
+          </fieldset>
+        </form>
+        <noscript
+          >Bitte aktivieren Sie JavaScript oder kontaktieren Sie uns per E-Mail
+          oder Telefon.</noscript
+        >
+      </section>
+    </main>
+    <footer>
+      <details id="privacy">
+        <summary>Datenschutzhinweise zum SumUp-Gebührenvergleich</summary>
+        <p>
+          Verantwortlich: neXaro Solutions, Sebastian Pötschke, Kirchstraße 1A,
+          15757 Halbe, kontakt@nexaro-solutions.de. Wir verarbeiten Ihre Angaben
+          zur Bearbeitung Ihres angefragten Gebührenvergleichs und zur damit zusammenhängenden Kontaktaufnahme.
+          Die Daten werden im internen CRM auf Supabase-Infrastruktur in der
+          EU-Region Irland gespeichert. Zur Missbrauchsbegrenzung wird ein nicht
+          im Klartext gespeicherter, kryptografisch abgeleiteter IP-Wert
+          kurzzeitig verwendet. Technische Zugriffsdaten können beim
+          Hostinganbieter anfallen.
+        </p>
+        <p>
+          Sie können einer werblichen Kontaktaufnahme jederzeit widersprechen. Diese Anfrage begründet keine Einwilligung in weitere Werbe-E-Mails. Ihre Kontaktfreigabe für die konkrete Anfrage können Sie jederzeit für die Zukunft widerrufen. Schreiben Sie dazu an kontakt@nexaro-solutions.de.
+          Anfragen ohne weitere Geschäftsbeziehung werden gelöscht, sobald sie
+          nicht mehr benötigt werden, sofern keine Aufbewahrungspflichten
+          bestehen. Sie können Auskunft, Berichtigung, Löschung oder
+          Einschränkung der Verarbeitung verlangen und sich bei einer
+          Datenschutzaufsichtsbehörde beschweren.
+        </p>
+      </details>
+      <p>
+        neXaro Solutions · Inhaber Sebastian Pötschke · Kirchstraße 1A · 15757
+        Halbe<br />kontakt@nexaro-solutions.de · USt-IdNr. DE367084019
+      </p>
+    </footer>
+    <script src="nx-public-intake.js" defer></script>
+  </body>
+</html>
