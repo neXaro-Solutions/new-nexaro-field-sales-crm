@@ -1,4 +1,4 @@
-# Publish compact mobile Dashboard with focus, quick actions and expandable secondary sections (2026-09-24).
+# Publish clickable dashboard KPIs, global dashboard return, and accessible CRM microinteractions (2026-09-24).
 # Sync canonical Sales Hub source after repaired payment-statement table OCR and independently checked debit fee (2026-09-21).
 name: Sync Sales Hub to live Pages
 on:
