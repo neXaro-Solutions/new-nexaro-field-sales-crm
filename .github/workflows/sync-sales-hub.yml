@@ -1,4 +1,4 @@
-# Deploy selectable personal salutation in the CRM offer email (2026-09-24).
+# Publish offer deletion with confirmation and linked-invoice protection (2026-09-24).
 # Sync canonical Sales Hub source after repaired payment-statement table OCR and independently checked debit fee (2026-09-21).
 name: Sync Sales Hub to live Pages
 on:
