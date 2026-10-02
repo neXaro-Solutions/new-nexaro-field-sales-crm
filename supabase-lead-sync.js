@@ -56,6 +56,8 @@
       interest: ['sumup'],
       product: 'SumUp',
       need: 'Telefonische Erstansprache',
+      salesOpening: 'Hallo, Sebastian Pötschke von neXaro Solutions. Ich habe nur eine kurze Frage: Wissen Sie aktuell genau, was Sie Ihre Kartenzahlungen im Monat kosten?',
+      salesBridge: 'Genau deshalb rufe ich an. Ich mache für Unternehmen hier in der Region einen kurzen Vergleich. Ich kann Ihnen die Infos dazu per Mail schicken – wohin darf ich sie senden?',
       notes: p.notes || 'Öffentliche Unternehmensdaten. Vor dem Anruf sachlichen B2B-Bezug prüfen. E-Mail erst nach dokumentierter Freigabe senden.',
       callBatchDate: p.batch_date || '',
       createdAt: p.created_at || new Date().toISOString(),
@@ -73,7 +75,8 @@
 
   async function fetchRows(path) {
     const response = await fetch(`${CONFIG.url}/rest/v1/${path}`, {
-      headers: {...window.nexaroAuth.headers, Accept:'application/json'}
+      headers: {...window.nexaroAuth.headers, Accept:'application/json'},
+      cache: 'no-store'
     });
     if (!response.ok) throw new Error(`Supabase Lead-Sync fehlgeschlagen (${response.status})`);
     return response.json();
@@ -101,7 +104,6 @@
       const mapped = mapDailyCallLeadToCrmLead(p);
       const existing = findExisting(mapped, 'dailyCallLeadId');
       if (existing) {
-        // Preserve locally advanced pipeline status; refresh contact/source data only.
         const localStatus = existing.status;
         Object.assign(existing, mapped);
         if (localStatus && localStatus !== 'neu') existing.status = localStatus;
@@ -110,13 +112,27 @@
       S.leads.unshift(mapped); imported++;
     }
 
-    if (imported) {
-      if (typeof save === 'function') save();
-      if (typeof render === 'function') render();
-      if (!silent && typeof toast === 'function') toast(`${imported} neue Leads importiert`);
-    }
+    if (typeof save === 'function') save();
+    if (typeof render === 'function') render();
+    if (imported && !silent && typeof toast === 'function') toast(`${imported} neue Leads importiert`);
     return {ok:true, skipped:false, imported, publicTotal:publicRows.length, dailyCallTotal:callRows.length};
   }
 
+  let attempts = 0;
+  async function syncWhenReady() {
+    attempts++;
+    try {
+      const result = await syncPublicLeads({silent:true});
+      if (result.ok) return;
+      if (attempts < 60 && ['not-authenticated','crm-not-ready'].includes(result.reason)) {
+        setTimeout(syncWhenReady, 500);
+      }
+    } catch (error) {
+      console.warn('neXaro Lead-Sync', error);
+      if (attempts < 12) setTimeout(syncWhenReady, 1500);
+    }
+  }
+
   window.nexaroLeadSync = {mapPublicLeadToCrmLead, mapDailyCallLeadToCrmLead, syncPublicLeads, sync:syncPublicLeads};
+  setTimeout(syncWhenReady, 0);
 })();
